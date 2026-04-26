@@ -1,6 +1,8 @@
+clear;clc;close all
+
 %% Preprocess
 
-Ndiv   = 500;
+Ndiv   = 50;
 deltaB = 2*pi/Ndiv;
 R      = 0.5;
 
@@ -13,22 +15,25 @@ l  = zeros(Ndiv,1);
 
 X  = zeros(Ndiv+1,2);
 Xc = zeros(Ndiv,2);
+delta = zeros(Ndiv,2);
 
-cl = zeros(Ndiv,1);
-cp = zeros(Ndiv,1);
+cl  = zeros(Ndiv,1);
+cp  = zeros(Ndiv,1);
+cm1_4 = zeros(Ndiv,1);
 
 for ii = 1:Ndiv+1
     X(ii,:)  = R*[cos((ii-1)*deltaB), -sin((ii-1)*deltaB)];
 end
 
 for jj = 1:Ndiv
-    l(jj)    = sqrt((X(jj,1) - X(jj+1,1))^2 + (X(jj,2) - X(jj+1,2))^2);
-    Xc(jj,:) = (X(jj,:) + X(jj+1,:))/2;
-    ca(jj)   = (X(jj+1,1) - X(jj,1))/l(jj);
-    sa(jj)   = (X(jj,2) - X(jj+1,2))/l(jj);
+    l(jj)       = sqrt((X(jj,1) - X(jj+1,1))^2 + (X(jj,2) - X(jj+1,2))^2);
+    Xc(jj,:)    = (X(jj,:) + X(jj+1,:))/2;
+    delta(jj,:) = X(jj+1,:) - X(jj,:);
+    ca(jj)      = (X(jj+1,1) - X(jj,1))/l(jj);
+    sa(jj)      = (X(jj,2) - X(jj+1,2))/l(jj);
 
-    Nc(jj,:) = [sa(jj,1),ca(jj,1)];
-    Tc(jj,:) = [ca(jj,1),-sa(jj,1)];
+    Nc(jj,:)  = [sa(jj,1),ca(jj,1)];
+    Tc(jj,:)  = [ca(jj,1),-sa(jj,1)];
 end
 
 %% Process
@@ -79,21 +84,174 @@ gamma = a\b;
 gamma(K) = 0.5*(gamma(K-1)+gamma(K+1));
 
 for ii=1:Ndiv
-     cl(ii) = 2*gamma(ii)*l(ii)/Qinfmod;
-     cp(ii) = 1 - (gamma(ii)/Qinfmod)^2;
+     cl(ii)    = 2*gamma(ii)*l(ii)/Qinfmod;
+     cp(ii)    = 1 - (gamma(ii)/Qinfmod)^2;
+     cm1_4(ii) = cp(ii)*((Xc(ii,1)/R)*(delta(ii,1)/R) + (Xc(ii,2)/R)*(delta(ii,2)/R)) - 0.25*cl(ii);
 end
 
-CL = sum(cl);
-L  = CL*0.5*Qinfmod^2*2*R*rho;
+CL    = sum(cl);
+L     = CL*0.5*Qinfmod^2*2*R*rho;
+CM1_4 = sum(cm1_4);
+M1_4  = CM1_4*0.5*rho*Qinfmod^2*R^2;
 
-theta_c = atan2(Xc(:,2), Xc(:,1));
-[theta_sorted, idx] = sort(theta_c);
-figure;
-plot(rad2deg(theta_sorted), cp(idx), '-o','MarkerSize',3);
-xlabel('\theta (rad)'); ylabel('C_p');
-title('Distribución de C_p en los paneles (ordenada por \theta)');
-grid on;
+%% Kármán-Tsien Compressibility Correction & Critical Mach Number
 
+gam = 1.4;
+
+Cp0     = cp;
+Cp0_min = min(Cp0);
+fprintf('Incompressible Cp_min = %.4f\n', Cp0_min);
+
+% Kármán-Tsien correction
+KT = @(Cp0_val, M) Cp0_val ./ ( sqrt(1 - M.^2) + ...
+     (M.^2 ./ (1 + sqrt(1 - M.^2))) .* (Cp0_val / 2) );
+
+% Critical Cp (local Mach = 1, isentropic)
+Cp_crit = @(M) (2 ./ (gam .* M.^2)) .* ...
+               ( ( (2/(gam+1)) .* (1 + (gam-1)/2 .* M.^2) ).^(gam/(gam-1)) - 1 );
+
+residual = @(M) KT(Cp0_min, M) - Cp_crit(M);
+
+% --- Robust bracket search ---
+% KT is only physically valid where its denominator > 0
+% For very negative Cp0, the denominator flips sign at high M → non-physical
+M_scan   = linspace(0.02, 0.99, 5000);
+denom_KT = sqrt(1 - M_scan.^2) + ...
+           (M_scan.^2 ./ (1 + sqrt(1 - M_scan.^2))) .* (Cp0_min / 2);
+
+valid = denom_KT > 0;                  % physical region only
+M_valid  = M_scan(valid);
+res_scan = arrayfun(residual, M_valid);
+
+% Find first sign change (= physical Mcr)
+sc = find(diff(sign(res_scan)) ~= 0, 1, 'first');
+
+if isempty(sc)
+    error('No critical Mach found. Cp0_min = %.4f — body may have no suction.', Cp0_min);
+end
+
+Mcr = fzero(residual, [M_valid(sc), M_valid(sc+1)]);
+fprintf('=== Critical Mach Number: Mcr = %.4f ===\n', Mcr);
+
+%% Post-processing Visualization
+
+th_cyl   = linspace(0, 2*pi, 500);           % cylinder outline
+theta_plot = ((1:Ndiv)' - 0.5) * 360/Ndiv;  % panel angle [deg], clockwise from (R,0)
+
+% Analytic solutions (clockwise convention to match panel ordering)
+theta_an_deg = linspace(0, 360, 1000);
+theta_an_rad = theta_an_deg * pi/180;
+Vt_an = -2*Qinfmod * sin(theta_an_rad + alpha);          % tangential velocity
+Cp_an =  1 - (2*sin(theta_an_rad + alpha)).^2;           % pressure coefficient
+
+% ── Figure 1: Vortex strength distribution ─────────────────────────────────
+figure('Name','Vortex Strength Distribution','Color','w');
+hold on; axis equal off;
+
+plot(R*cos(th_cyl), R*sin(th_cyl), 'k-', 'LineWidth', 1.5);
+
+sc1 = 0.25 / max(abs(gamma));               % scale so max height = 0.25
+for jj = 1:Ndiv
+    col = 'b';
+    gammaPlot = gamma(jj);
+    if gamma(jj) < 0
+        col = 'r';
+        gammaPlot = -gamma(jj);
+    end
+    p1 = X(jj,:);
+    p2 = X(jj+1,:);
+    p3 = p2 + gammaPlot*sc1*Nc(jj,:);      % outer corners
+    p4 = p1 + gammaPlot*sc1*Nc(jj,:);
+    fill([p1(1),p2(1),p3(1),p4(1)], ...
+         [p1(2),p2(2),p3(2),p4(2)], col, ...
+         'EdgeColor',col, 'LineWidth',0.3, 'FaceAlpha',0.5);
+end
+
+text( 0.20,  0.72, '\gamma > 0', 'Color','b', 'FontSize',12, ...
+      'FontName','Times New Roman');
+text( 0.20, -0.75, '\gamma < 0', 'Color','r', 'FontSize',12, ...
+      'FontName','Times New Roman');
+text( 0.00,  0.00, sprintf('N_{div} = %d', Ndiv), 'FontSize',11, ...
+      'FontName','Times New Roman', 'HorizontalAlignment','center');
+title('DISTRIBUTION OF VORTEX STRENGTH', ...
+      'FontName','Times New Roman', 'FontWeight','normal');
+
+% ── Figure 2: Tangential velocity distribution ─────────────────────────────
+figure('Name','Surface Velocity Distribution','Color','w');
+hold on; grid on; box on; grid minor;
+
+plot(theta_plot,  gamma,  'b-', 'LineWidth',1.5, 'DisplayName','CSV');
+plot(theta_an_deg, Vt_an, 'bo', 'MarkerSize',4,  'DisplayName','Analytic');
+
+xlim([0 360]); xticks(0:50:350);
+xlabel('\theta (deg.)',  'FontName','Times New Roman', 'FontSize',12);
+ylabel('V_t',           'FontName','Times New Roman', 'FontSize',12);
+title({'DISTRIBUTION OF VELOCITY ON THE SURFACE','OF THE CYLINDER'}, ...
+       'FontName','Times New Roman', 'FontWeight','normal');
+legend('Location','southeast', 'FontSize',10);
+
+ysc = max(abs(gamma));
+text(130,  0.55*ysc, sprintf('\\alpha = %g deg.', rad2deg(alpha)), ...
+     'FontSize',11, 'FontName','Times New Roman');
+text(130,  0.25*ysc, sprintf('N_{div} = %d', Ndiv), ...
+     'FontSize',11, 'FontName','Times New Roman');
+
+% ── Figure 3: Cp line plot ──────────────────────────────────────────────────
+figure('Name','Cp Distribution','Color','w');
+hold on; grid on; box on; grid minor;
+
+plot(theta_plot, cp, 'b-', 'LineWidth',1.5);
+
+xlim([0 360]); xticks(0:50:350);
+xlabel('\theta (deg.)', 'FontName','Times New Roman', 'FontSize',12);
+ylabel('C_p',           'FontName','Times New Roman', 'FontSize',12);
+title('DISTRIBUTION OF PRESSURE COEFFICIENT', ...
+      'FontName','Times New Roman', 'FontWeight','normal');
+
+cp_bot = min(cp);                    % most negative Cp, for text placement
+text(130, 0.30*cp_bot, sprintf('\\alpha = %g deg.', rad2deg(alpha)), ...
+     'FontSize',11, 'FontName','Times New Roman');
+text(130, 0.55*cp_bot, sprintf('N_{div} = %d', Ndiv), ...
+     'FontSize',11, 'FontName','Times New Roman');
+
+% ── Figure 4: Cp vectors on cylinder body (with arrowheads) ────────────────
+figure('Name','Cp on Body','Color','w');
+hold on; axis equal off;
+
+plot(R*cos(th_cyl), R*sin(th_cyl), 'k-', 'LineWidth', 1.5);
+
+sc4 = 0.3 / max(abs(cp));   % scale: max vector length = 0.3
+hs  = 0.4;                  % MaxHeadSize (relative to arrow length)
+
+mask_suc  = cp <  0;        % suction panels
+mask_pres = cp >= 0;        % pressure panels
+
+% ── Suction (Cp < 0, red): tail AT surface, head OUTSIDE, points outward ──
+x0_r = Xc(mask_suc,1);
+y0_r = Xc(mask_suc,2);
+dx_r = abs(cp(mask_suc)).*sc4.*Nc(mask_suc,1);
+dy_r = abs(cp(mask_suc)).*sc4.*Nc(mask_suc,2);
+quiver(x0_r, y0_r, dx_r, dy_r, 0, 'r', ...
+       'MaxHeadSize', hs, 'LineWidth', 0.8);
+
+% ── Pressure (Cp > 0, blue): tail OUTSIDE, head AT surface, points inward ──
+x0_b = Xc(mask_pres,1) + cp(mask_pres).*sc4.*Nc(mask_pres,1);
+y0_b = Xc(mask_pres,2) + cp(mask_pres).*sc4.*Nc(mask_pres,2);
+dx_b = Xc(mask_pres,1) - x0_b;
+dy_b = Xc(mask_pres,2) - y0_b;
+quiver(x0_b, y0_b, dx_b, dy_b, 0, 'b', ...
+       'MaxHeadSize', hs, 'LineWidth', 0.8);
+
+% ── Annotations ────────────────────────────────────────────────────────────
+x_txt = R + max(abs(cp))*sc4 + 0.12;
+text(x_txt,  0.15, sprintf('\\alpha = %g deg.', rad2deg(alpha)), ...
+     'FontSize',11, 'FontName','Times New Roman');
+text(x_txt,  0.00, sprintf('C_l = %.4f', CL), ...
+     'FontSize',11, 'FontName','Times New Roman');
+text(x_txt, -0.15, sprintf('N_{div} = %d', Ndiv), ...
+     'FontSize',11, 'FontName','Times New Roman');
+title('DISTRIBUTION OF PRESSURE COEFFICIENT', ...
+      'FontName','Times New Roman', 'FontWeight','normal');
 
 % Pel segon exercici part del treball - Part 1
 % A = [A11 A12 ; A21 A22]
