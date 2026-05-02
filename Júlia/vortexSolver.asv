@@ -114,6 +114,9 @@ for k = 1:length(Mvec)
     % ---- Cp critical ----
     Cp_crit = (2/(gamma_air*M^2)) * ...
         ( ((1 + (gamma_air-1)/2*M^2)/(1+(gamma_air-1)/2*M^2))^(gamma_air/(gamma_air-1)) - 1 );
+
+    @(M) (2 ./ (gam .* M.^2)) .* ...
+               ( ( (2/(gam+1)) .* (1 + (gam-1)/2 .* M.^2) ).^(gam/(gam-1)) - 1 );
     
     % diferència entre els dos criteris
     diff(k) = Cp_KT - Cp_crit;
