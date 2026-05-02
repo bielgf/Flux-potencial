@@ -4,16 +4,15 @@ clear;clc;close all
 
 % Read the data file
 Ndiv = 16;
-filename = sprintf('C:\\Users\\Biel\\Desktop\\UNI\\MUEA\\Q2\\AMVO\\POTENCIAL\\Flux potencial\\HQ_300\\HQ300_%.0f.txt',Ndiv);
+filename = sprintf('..\\HQ_300\\HQ300_%.0f.txt',Ndiv);
 
 % Open and read the file
-data = load(filename);  % or use importdata/readmatrix
+data = load(filename);
 
 % Extract variables
 index = data(:, 1);
 X     = [data(:, 2) data(:, 3)];
-
-c      = 1;
+c     = 1;
 
 Nc = zeros(Ndiv,2);
 Tc = zeros(Ndiv,2);
