@@ -61,3 +61,6 @@ end
 
 Mcr_val = [Mcr(end) - 0.15, Mcr(end) - 0.10, Mcr(end) - 0.05, Mcr(end)];
 
+%% Two NACA 0012 airfoils tandem
+
+computeGeometry2airfoil(16,4)
