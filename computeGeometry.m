@@ -1,7 +1,7 @@
 function geom = computeGeometry(Ndiv)
 
     % Open and read the file
-    filename = sprintf('..\\HQ_300\\HQ300_%.0f.txt',Ndiv);
+    filename = sprintf('HQ_300\\HQ300_%.0f.txt',Ndiv);
     data     = load(filename);
     
     % Extract variables
