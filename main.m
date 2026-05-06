@@ -78,3 +78,6 @@ for ii = 1:length(Mcr_val)
     CL_Mcr_table(ii) = CL_comp;
 end
 
+%% Two NACA 0012 airfoils tandem
+
+computeGeometry2airfoil(16,4)
