@@ -5,9 +5,9 @@ c2 = 0.34; % chord second airfoil
 d  = 0.02; % gap
 
 % Read NACA 0012 file
-filename = sprintf('NACA0012/NACA_10_N_%d.txt', Ndiv);
-data = load(filename);
-Xbase = [data(:,2) data(:,3)];
+filename = sprintf('NACA0012\\NACA_10_N_%d.txt', Ndiv);
+data     = load(filename);
+Xbase    = [data(:,2) data(:,3)];
 
 % AIRFOIL 1 (horizontal stabilizer) 
 
@@ -35,10 +35,41 @@ end
 % Airfoils altogether
 
 geom.X = [X1; X2];
+geom.c = c1 + c2;
 
-figure; hold on; axis equal; grid on
-plot(X1(:,1),X1(:,2),'b.-')
-plot(X2(:,1),X2(:,2),'r.-')
-legend('Main airfoil','Elevator')
-title(sprintf('Two-element geometry, \\delta_e = %.1f°',delta_e_deg))
-xlabel('x'); ylabel('z');
+Ntotal = 2*Ndiv; 
+geom.l     = zeros(Ntotal,1);
+geom.Xc    = zeros(Ntotal,2);
+geom.delta = zeros(Ntotal,2);
+geom.ca    = zeros(Ntotal,1);
+geom.sa    = zeros(Ntotal,1);
+geom.Nc    = zeros(Ntotal,2);
+geom.Tc    = zeros(Ntotal,2);
+
+for jj = 1:Ndiv
+
+    % Main airfoil
+    geom.l(jj)       = sqrt((X1(jj,1) - X1(jj+1,1))^2 + (X1(jj,2) - X1(jj+1,2))^2);          % Panel's lenght
+    geom.Xc(jj,:)    = (X1(jj,:) + X1(jj+1,:))/2;                                            % Panel's geometric center
+    geom.delta(jj,:) = X1(jj+1,:) - X1(jj,:);                                                % Increments in X and Z
+    geom.ca(jj)      = (X1(jj+1,1) - X1(jj,1))/geom.l(jj);                                   % Cosinus function
+    geom.sa(jj)      = (X1(jj,2) - X1(jj+1,2))/geom.l(jj);                                   % Sinus function
+    geom.Nc(jj,:)    = [geom.sa(jj,1),geom.ca(jj,1)];                                        % Normal vectors coordinates
+    geom.Tc(jj,:)    = [geom.ca(jj,1),-geom.sa(jj,1)];                                       % Tangent vector coordinates
+
+    % Elevator
+    geom.l(jj+Ndiv)       = sqrt((X2(jj,1) - X2(jj+1,1))^2 + (X2(jj,2) - X2(jj+1,2))^2);     % Panel's lenght
+    geom.Xc(jj+Ndiv,:)    = (X2(jj,:) + X2(jj+1,:))/2;                                       % Panel's geometric center
+    geom.delta(jj+Ndiv,:) = X2(jj+1,:) - X2(jj,:);                                           % Increments in X and Z
+    geom.ca(jj+Ndiv)      = (X2(jj+1,1) - X2(jj,1))/geom.l(jj+Ndiv);                         % Cosinus function
+    geom.sa(jj+Ndiv)      = (X2(jj,2) - X2(jj+1,2))/geom.l(jj+Ndiv);                         % Sinus function
+    geom.Nc(jj+Ndiv,:)    = [geom.sa(jj+Ndiv,1),geom.ca(jj+Ndiv,1)];                         % Normal vectors coordinates
+    geom.Tc(jj+Ndiv,:)    = [geom.ca(jj+Ndiv,1),-geom.sa(jj+Ndiv,1)];                        % Tangent vector coordinates
+end
+
+% figure; hold on; axis equal; grid on
+% plot(X1(:,1),X1(:,2),'b.-')
+% plot(X2(:,1),X2(:,2),'r.-')
+% legend('Main airfoil','Elevator')
+% title(sprintf('Two-element geometry, \\delta_e = %.1f°',delta_e_deg))
+% xlabel('x'); ylabel('z');

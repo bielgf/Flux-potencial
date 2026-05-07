@@ -79,5 +79,54 @@ for ii = 1:length(Mcr_val)
 end
 
 %% Two NACA 0012 airfoils tandem
+clear;clc;
 
-computeGeometry2airfoil(16,4)
+Ndiv    = [16, 32, 64, 128, 256, 512];
+subsection = 4;  % 4 or 5
+
+switch subsection
+    case 4
+        alpha   = deg2rad(0:2:8);
+        delta_e = deg2rad([0;0;0;0;0]);
+    case 5
+        alpha   = deg2rad([4;4;4;4;4]);
+        delta_e = deg2rad(0:4:16);
+    otherwise
+        disp('Incorrect exercise subsection')
+end
+
+nA = length(alpha);
+nN = length(Ndiv);
+
+CL_table   = zeros(nA,nN);
+CM14_table = zeros(nA,nN);
+L_table    = zeros(nA,nN);
+M14_table  = zeros(nA,nN);
+
+rho     = 1.225;
+gam     = 1.4;
+Qinfmod = 1;
+Minf    = 0;
+
+for jj = 1:nN
+    for ii = 1:nA
+        Qinf  = Qinfmod*[cos(alpha(ii)),sin(alpha(ii))];
+        geom  = computeGeometry2airfoil(Ndiv(jj),delta_e(ii));
+
+        gamma = computeCSV2(Ndiv(jj),geom,Qinf);
+        [CL,L,CM1_4,M1_4,CM0,cp,~] = computeAerodynamics2(Ndiv(jj),geom,gamma,Qinfmod,rho,alpha(ii),Minf);
+        CL_table(ii,jj)   = CL;
+        CM14_table(ii,jj) = CM1_4;
+        L_table(ii,jj)    = L;
+        M14_table(ii,jj)  = M1_4;
+        
+        Ntotal = 2*Ndiv(jj);
+        if Ndiv(jj) == 32  && alpha(ii) == deg2rad(8); plotGammaDistribution(Ntotal,geom.X,geom.Nc,gamma); end
+        % if Ndiv(jj) == 256 && alpha(ii) == deg2rad(8); plotCpChordDistribution(geom.X,cp,alpha(ii),Ntotal);
+        %                                                plotCpDistribution(geom.X,geom.Nc,geom.Xc,cp,alpha(ii),Ntotal,CL); end
+    end
+end
+
+plotCLandCM14vsalpha(alpha,CL_table,CM14_table);
+plotConvergence(Ndiv,CL_table,alpha);
+
