@@ -130,3 +130,21 @@ end
 plotCLandCM14vsalpha(alpha,CL_table,CM14_table);
 plotConvergence(Ndiv,CL_table,alpha);
 
+%% 
+% ---------- PART 2: PRANDTL’S LIFTING LINE MODEL --------------------- %
+% ---------- APPLIED TO COMPOUND WINGS OF LARGE ASPECT RATIO ---------- %
+
+%% Study of the wing isolated - HQ300
+
+b = 15;
+b_h = 3;
+c_r = 0.95;
+c_rh = 0.5;
+c_t = 0.55;
+c_th = 0.3;
+l_h = 4;
+l_v = 1.2;
+Sv = 1.5;
+
+Ndiv = 512;
+alpha = deg2rad(4);
