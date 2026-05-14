@@ -7,7 +7,7 @@ function plotCLandCM14vsalpha(alpha,CL_table,CM14_table)
     xlabel(sprintf('\\alpha (degrees)'),'FontSize', 12);
     ylabel('C_l','FontSize', 12);
     Clalpha = polyfit(alpha,CL_table(:,end),1);
-    text(4,1,sprintf('C_{l_{\\alpha}} = %.4f',Clalpha(1)))
+    text(4,0.65,sprintf('C_{l_{\\alpha}} = %.4f',Clalpha(1)))
 
     figure('Name','Cm14 Slope','Color','w');
     hold on; grid on;
@@ -16,6 +16,6 @@ function plotCLandCM14vsalpha(alpha,CL_table,CM14_table)
     xlabel(sprintf('\\alpha (degrees)'),'FontSize', 12);
     ylabel('C_{m_{1/4}}','FontSize', 12);
     Cmalpha = polyfit(alpha,CM14_table(:,end),1);
-    text(4,-0.135,sprintf('C_{m_{\\alpha}} = %.4f',Cmalpha(1)))
+    text(4,0.65,sprintf('C_{m_{\\alpha}} = %.4f',Cmalpha(1)))
 
 end

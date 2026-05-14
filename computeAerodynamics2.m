@@ -15,7 +15,7 @@ function [CL,L,CM1_4,M1_4,CM0,cp,CL_comp] = computeAerodynamics2(Ndiv,geom,gamma
     cp_comp = zeros(Ntotal,1);
     cl_comp = zeros(Ntotal,2);
 
-    for ii=1:Ntotal
+    for ii=1:Ndiv
         cl(ii)       = 2*gamma(ii)*l(ii)/Qinfmod;
         cp(ii)       = 1 - (gamma(ii)/Qinfmod)^2;
         cm1_4(ii)    = cp(ii)*((Xc(ii,1)/c - 0.25)*(delta(ii,1)/c) + (Xc(ii,2)/c)*(delta(ii,2)/c));

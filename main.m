@@ -81,9 +81,14 @@ end
 %% Two NACA 0012 airfoils tandem
 clear;clc;
 
-Ndiv_main = [16, 32, 64, 128, 256, 512];
+% Disclaimer: It is important for this code to mantain the same number of
+% Ndiv_main and Ndiv_second, as well as the same number of alpha and
+% delta_e combinations, for how the loops are defined.
+
+Ndiv_main   = [16, 32, 64, 128, 256, 512];
 Ndiv_second = [16, 32, 64, 128, 256, 512];
-subsection = 4;  % 4 or 5
+Ntotal      = Ndiv_main + Ndiv_second;
+subsection  = 5;  % 4 or 5
 
 switch subsection
     case 4
@@ -114,23 +119,24 @@ for jj = 1:nN
         Qinf  = Qinfmod*[cos(alpha(ii)),sin(alpha(ii))];
         geom  = computeGeometry2airfoil(Ndiv_main(jj), Ndiv_second(jj), delta_e(ii));
 
-        Ntotal = Ndiv_main(jj) + Ndiv_second(jj);
-
-        gamma = computeCSV2(Ntotal(jj),geom,Qinf);
+        gamma = computeCSV2(Ndiv_main(jj),Ndiv_second(jj),geom,Qinf);
         [CL,L,CM1_4,M1_4,CM0,cp,~] = computeAerodynamics2(Ntotal(jj),geom,gamma,Qinfmod,rho,alpha(ii),Minf);
         CL_table(ii,jj)   = CL;
         CM14_table(ii,jj) = CM1_4;
         L_table(ii,jj)    = L;
-        M14_table(ii,jj)  = M1_4;
-        
-        if Ndiv_main(jj) == 32  && alpha(ii) == deg2rad(8); plotGammaDistribution(Ntotal,geom.X,geom.Nc,gamma); end
-        % if Ndiv(jj) == 256 && alpha(ii) == deg2rad(8); plotCpChordDistribution(geom.X,cp,alpha(ii),Ntotal);
-        %                                                plotCpDistribution(geom.X,geom.Nc,geom.Xc,cp,alpha(ii),Ntotal,CL); end
+        M14_table(ii,jj)  = M1_4;     
     end
+
+    if Ndiv_main(jj) == 256 && subsection == 4; plotCpChordDistribution2(geom.X,cp,alpha(ii),delta_e(ii),Ndiv_main(jj),Ndiv_second(jj));
+                                                plotCpDistribution2(geom.X,geom.Nc,geom.Xc,cp,alpha(ii),delta_e(ii),Ndiv_main(jj),Ndiv_second(jj)); end
+    if Ndiv_main(jj) == 256 && subsection == 5; plotCpChordDistribution2(geom.X,cp,alpha(ii),delta_e(ii),Ndiv_main(jj),Ndiv_second(jj));
+                                                plotCpDistribution2(geom.X,geom.Nc,geom.Xc,cp,alpha(ii),delta_e(ii),Ndiv_main(jj),Ndiv_second(jj)); end 
 end
 
-plotCLandCM14vsalpha(alpha,CL_table,CM14_table);
-plotConvergence(Ndiv,CL_table,alpha);
+% PLOTS
+if subsection == 4; plotCLandCM14vsalpha(alpha,CL_table,CM14_table); end
+if subsection == 5; plotCLandCM14vsdelta(delta_e,CL_table,CM14_table); end
+
 
 %% 
 % ---------- PART 2: PRANDTL’S LIFTING LINE MODEL --------------------- %
