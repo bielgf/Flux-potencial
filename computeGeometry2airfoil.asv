@@ -51,9 +51,9 @@ geom.sa    = zeros(Ntotal,1);
 geom.Nc    = zeros(Ntotal,2);
 geom.Tc    = zeros(Ntotal,2);
 
-for jj = 1:Ndiv_main
+for jj = 1:Ndiv
 
-    % Main airfoil (horizontal stabilizer)
+    % Main airfoil
     geom.l(jj)       = sqrt((X1(jj,1) - X1(jj+1,1))^2 + (X1(jj,2) - X1(jj+1,2))^2);          % Panel's lenght
     geom.Xc(jj,:)    = (X1(jj,:) + X1(jj+1,:))/2;                                            % Panel's geometric center
     geom.delta(jj,:) = X1(jj+1,:) - X1(jj,:);                                                % Increments in X and Z
@@ -62,14 +62,14 @@ for jj = 1:Ndiv_main
     geom.Nc(jj,:)    = [geom.sa(jj,1),geom.ca(jj,1)];                                        % Normal vectors coordinates
     geom.Tc(jj,:)    = [geom.ca(jj,1),-geom.sa(jj,1)];                                       % Tangent vector coordinates
 
-    % Second airfoil (elevator)
-    geom.l(jj+Ndiv_main)       = sqrt((X2(jj,1) - X2(jj+1,1))^2 + (X2(jj,2) - X2(jj+1,2))^2);     % Panel's lenght
-    geom.Xc(jj+Ndiv_main,:)    = (X2(jj,:) + X2(jj+1,:))/2;                                       % Panel's geometric center
-    geom.delta(jj+Ndiv_main,:) = X2(jj+1,:) - X2(jj,:);                                           % Increments in X and Z
-    geom.ca(jj+Ndiv_main)      = (X2(jj+1,1) - X2(jj,1))/geom.l(jj+Ndiv_main);                         % Cosinus function
-    geom.sa(jj+Ndiv_main)      = (X2(jj,2) - X2(jj+1,2))/geom.l(jj+Ndiv_main);                         % Sinus function
-    geom.Nc(jj+Ndiv_main,:)    = [geom.sa(jj+Ndiv_main,1),geom.ca(jj+Ndiv_main,1)];                         % Normal vectors coordinates
-    geom.Tc(jj+Ndiv_main,:)    = [geom.ca(jj+Ndiv_main,1),-geom.sa(jj+Ndiv_main,1)];                        % Tangent vector coordinates
+    % Elevator
+    geom.l(jj+Ndiv)       = sqrt((X2(jj,1) - X2(jj+1,1))^2 + (X2(jj,2) - X2(jj+1,2))^2);     % Panel's lenght
+    geom.Xc(jj+Ndiv,:)    = (X2(jj,:) + X2(jj+1,:))/2;                                       % Panel's geometric center
+    geom.delta(jj+Ndiv,:) = X2(jj+1,:) - X2(jj,:);                                           % Increments in X and Z
+    geom.ca(jj+Ndiv)      = (X2(jj+1,1) - X2(jj,1))/geom.l(jj+Ndiv);                         % Cosinus function
+    geom.sa(jj+Ndiv)      = (X2(jj,2) - X2(jj+1,2))/geom.l(jj+Ndiv);                         % Sinus function
+    geom.Nc(jj+Ndiv,:)    = [geom.sa(jj+Ndiv,1),geom.ca(jj+Ndiv,1)];                         % Normal vectors coordinates
+    geom.Tc(jj+Ndiv,:)    = [geom.ca(jj+Ndiv,1),-geom.sa(jj+Ndiv,1)];                        % Tangent vector coordinates
 end
 
 % figure; hold on; axis equal; grid on
