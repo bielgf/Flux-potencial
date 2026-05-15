@@ -120,7 +120,7 @@ for jj = 1:nN
         geom  = computeGeometry2airfoil(Ndiv_main(jj), Ndiv_second(jj), delta_e(ii));
 
         gamma = computeCSV2(Ndiv_main(jj),Ndiv_second(jj),geom,Qinf);
-        [CL,L,CM1_4,M1_4,CM0,cp,~] = computeAerodynamics2(Ntotal(jj),geom,gamma,Qinfmod,rho,alpha(ii),Minf);
+        [CL,L,CM1_4,M1_4,CM0,cp,~] = computeAerodynamics2(Ndiv_main(jj),Ndiv_second(jj),geom,gamma,Qinfmod,rho,alpha(ii),Minf);
         CL_table(ii,jj)   = CL;
         CM14_table(ii,jj) = CM1_4;
         L_table(ii,jj)    = L;
