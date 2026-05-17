@@ -146,6 +146,9 @@ if subsection == 5; plotCLandCM14vsdelta(delta_e,CL_table,CM14_table); end
 
 clear;clc;close all
 
+% Input Data
+
+% Geometric Data
 b    = 15;
 b_h  = 3;
 c_r  = 0.95;
@@ -156,36 +159,45 @@ l_h  = 4;
 l_v  = 1.2;
 Sv   = 1.5;
 i_w  = 0;
-i_h  = 3;
+i_h  = deg2rad(3);
+Sw   = (c_r + c_t)/2*b;
 
-Nw = 200;
+% Numerical Data
+Nw = 512;
 Nh = Nw/4;
 
-% Geometric discretization of the wing-canard configuration
+% Aerodynamic Data
+rho       = 1.225;
+alpha     = deg2rad(4);
+theta_tip = deg2rad(0);
+Claw      = 6.935845305522705;  
+Cl0w      = 0.623151006958811;
+i_inf     = [cos(alpha) , 0 , sin(alpha)];
+ur        = -i_inf;
+k_inf     = [-sin(alpha) , 0 , cos(alpha)];
+Qinf_mod  = norm(i_inf);
 
-yP_w = -b/2:b/Nw:b/2;
-yP_h = -b_h/2:b_h/Nh:b_h/2;
+% Geometric discretization of the wing-canard configuration
+dy_w = b/Nw;
+dy_h = b_h/Nh;
+yP_w = -b/2:dy_w:b/2;
+yP_h = -b_h/2:dy_h:b_h/2;
 
 P_w     = [zeros(size(yP_w)) ; yP_w ; zeros(size(yP_w))]';
 P_h     = [l_h*ones(size(yP_h)) ; yP_h ; zeros(size(yP_h))]';
 P_w_mid = [zeros(1,size(yP_w,2)-1) ; (yP_w(1:end-1)+yP_w(2:end))/2 ; zeros(1,size(yP_w,2)-1)]';
 P_h_mid = [l_h*ones(1,size(yP_h,2)-1) ; (yP_h(1:end-1)+yP_h(2:end))/2 ; zeros(1,size(yP_h,2)-1)]';
 
-theta_tip = deg2rad(0);
 theta_mid = theta_tip*(2*abs(P_w_mid(:,2))/b);
-cwi05      = c_r + (c_t - c_r)*(2*abs(P_w_mid(:,2))/b);
-
-alpha    = deg2rad(4);
-i_inf    = [cos(alpha) , 0 , sin(alpha)];
-ur       = -i_inf;
-k_inf    = [-sin(alpha) , 0 , cos(alpha)];
-Qinf_mod = norm(i_inf);
-
-Cla = 6.935845305522705;  
-Cl0 = 0.623151006958811;
+cwi05     = c_r + (c_t - c_r)*(2*abs(P_w_mid(:,2))/b);
+chi05     = c_rh + (c_th - c_rh)*(2*abs(P_h_mid(:,2))/b_h);
 
 
-gamma = computeWingConfig(Nw,P_w,P_w_mid,ur,cwi05,k_inf,Cla,Qinf_mod,Cl0,alpha,theta_mid);
+
+gamma = computeWingConfig(Nw,P_w,P_w_mid,ur,cwi05,k_inf,Claw,Qinf_mod,Cl0w,alpha,theta_mid);
+
+L  = rho*Qinf_mod*sum(gamma*dy_w);
+CL = L/(0.5*rho*Qinf_mod^2*Sw);
 
 
 function gamma = computeWingConfig(Nw,P_w,P_w_mid,ur,cwi05,k_inf,Cla,Q_inf_mod,Cl0,alpha,thetai05) % Punt 1 de la part 2
@@ -194,13 +206,13 @@ function gamma = computeWingConfig(Nw,P_w,P_w_mid,ur,cwi05,k_inf,Cla,Q_inf_mod,C
     b = zeros(Nw,1);
 
     for ii = 1:Nw
-        b(ii) = 0.5*cwi05(ii)*Q_inf_mod*(Cl0 + Cla*(alpha + thetai05(ii)));
+        b(ii,1) = 0.5*cwi05(ii)*Q_inf_mod*(Cl0 + Cla*(alpha + thetai05(ii)));
         for jj = 1:Nw
             if ii == jj
-                v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_w_mid(ii,:),ur);
+                v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_w_mid(ii,:),ur,'WingWing');
                 a(ii,jj) = -0.5*Cla*cwi05(ii)*dot(v,k_inf) + 1;
             else
-                v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_w_mid(ii,:),ur);
+                v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_w_mid(ii,:),ur,'WingWing');
                 a(ii,jj) = -0.5*Cla*cwi05(ii)*dot(v,k_inf);
             end
         end
@@ -210,31 +222,48 @@ function gamma = computeWingConfig(Nw,P_w,P_w_mid,ur,cwi05,k_inf,Cla,Q_inf_mod,C
 
 end
 
-function computeWingCanardConfig() % Punt 2,3,4 de la part 2
 
-    
+function gamma = computeWingCanardConfig(Nw,Nh)
 
-end
+    a = zeros(Nw+Nh,Nw+Nh);
+    b = zeros(Nw+Nh,1);
 
-function v = computeHSV(ii,jj,PA,PB,P,ur)
+    for ii = 1:Nw
+        b(ii,1) = 0.5*cwi05(ii)*Q_inf_mod*(Cl0w + Claw*(alpha + thetai05(ii)));
+        for jj = 1:Nw
+            if ii == jj
+                v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_w_mid(ii,:),ur,'WingWing');
+                a(ii,jj) = -0.5*Claw*cwi05(ii)*dot(v,k_inf) + 1;
+            else
+                v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_w_mid(ii,:),ur,'WingWing');
+                a(ii,jj) = -0.5*Claw*cwi05(ii)*dot(v,k_inf);
+            end
+        end
 
-    rA = P - PA;
-    rB = P - PB;
-
-    nrA = norm(rA);
-    nrB = norm(rB);
-    urA = rA/nrA;
-    urB = rB/nrB;
-    
-    if ii == jj
-        vInfA = 1/(4*pi) * ((1)/(nrA + dot(ur,rA))) * cross(ur,urA);
-        vInfB = 1/(4*pi) * ((1)/(nrB + dot(ur,rB))) * cross(ur,urB);
-        v     = vInfA - vInfB;
-    else
-        vAB   = 1/(4*pi) * ((nrA + nrB)/(nrA*nrB*(nrA*nrB + dot(rA,rB)))) * cross(rA,rB);
-        vInfA = 1/(4*pi) * ((1)/(nrA + dot(ur,rA))) * cross(ur,urA);
-        vInfB = 1/(4*pi) * ((1)/(nrB + dot(ur,rB))) * cross(ur,urB);
-        v     = vInfA + vAB - vInfB;
+        for jj = 1:Nh
+            v = computeHSV(ii,jj,P_h(jj,:),P_h(jj+1,:),P_w_mid(ii,:),ur,'WingCnrd');
+            a(ii,Nw+jj) = -0.5*Claw*cwi05(ii)*dot(v,k_inf);
+        end
     end
+
+    for ii = 1:Nh
+        b(Nw+ii,1) = 0.5*chi05(ii)*Q_inf_mod*(Cl0h + Clah*alpha + i_h);
+        for jj = 1:Nh
+            if ii == jj
+                v = computeHSV(ii,jj,P_h(jj,:),P_h(jj+1,:),P_h_mid(ii,:),ur,'CnrdCnrd');
+                a(Nw+ii,Nw+jj) = -0.5*Clah*chi05(ii)*dot(v,k_inf) + 1;
+            else
+                v = computeHSV(ii,jj,P_h(jj,:),P_h(jj+1,:),P_h_mid(ii,:),ur,'CnrdCnrd');
+                a(Nw+ii,Nw+jj) = -0.5*Clah*chi05(ii)*dot(v,k_inf);
+            end
+        end
+
+        for jj = 1:Nw
+            v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_h_mid(ii,:),ur,'CnrdWing');
+            a(Nw+ii,jj) = -0.5*Clah*chi05(ii)*dot(v,k_inf);
+        end
+    end
+
+    gamma = a\b;
 
 end
