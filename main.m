@@ -5,6 +5,8 @@
 %%%%%%%%%%%%%%%%%%% AMVO - Course 2025-2026 %%%%%%%%%%%%%%%%%%%%%%%%
 %------------------------------------------------------------------%
 
+
+%% -------------------------------------------------------------- %%
 % ---------- PART 1: THE CONSTANT STRENGTH VORTEX METHOD --------- %
 % ---------- APPLIED TO SIMPLE AND TWO-ELEMENT AIRFOILS ---------- %
 
@@ -137,14 +139,10 @@ end
 if subsection == 4; plotCLandCM14vsalpha(alpha,CL_table,CM14_table); end
 if subsection == 5; plotCLandCM14vsdelta(delta_e,CL_table,CM14_table); end
 
-
-%% 
+%% ------------------------------------------------------------------- %%
 % ---------- PART 2: PRANDTL’S LIFTING LINE MODEL --------------------- %
 % ---------- APPLIED TO COMPOUND WINGS OF LARGE ASPECT RATIO ---------- %
 
-%% Study of the wing isolated - HQ300
-
-clear;clc;close all
 
 % Input Data
 
@@ -169,13 +167,17 @@ Nh = Nw/4;
 % Aerodynamic Data
 rho       = 1.225;
 alpha     = deg2rad(4);
-theta_tip = deg2rad(0);
 Claw      = 6.935845305522705;  
 Cl0w      = 0.623151006958811;
 i_inf     = [cos(alpha) , 0 , sin(alpha)];
 ur        = -i_inf;
 k_inf     = [-sin(alpha) , 0 , cos(alpha)];
 Qinf_mod  = norm(i_inf);
+
+Cd_w = @(Clw) 0.0183*Clw.^2 - 0.0302*Clw + 0.0187;
+Cd_h = @(Clh) 0.0052*Clh^2 + 0.0071;
+Cd_v = 0.0062;
+
 
 % Geometric discretization of the wing-canard configuration
 dy_w = b/Nw;
@@ -188,82 +190,113 @@ P_h     = [l_h*ones(size(yP_h)) ; yP_h ; zeros(size(yP_h))]';
 P_w_mid = [zeros(1,size(yP_w,2)-1) ; (yP_w(1:end-1)+yP_w(2:end))/2 ; zeros(1,size(yP_w,2)-1)]';
 P_h_mid = [l_h*ones(1,size(yP_h,2)-1) ; (yP_h(1:end-1)+yP_h(2:end))/2 ; zeros(1,size(yP_h,2)-1)]';
 
-theta_mid = theta_tip*(2*abs(P_w_mid(:,2))/b);
 cwi05     = c_r + (c_t - c_r)*(2*abs(P_w_mid(:,2))/b);
 chi05     = c_rh + (c_th - c_rh)*(2*abs(P_h_mid(:,2))/b_h);
 
 
+%% Study of the wing isolated - HQ300
 
-gamma = computeWingConfig(Nw,P_w,P_w_mid,ur,cwi05,k_inf,Claw,Qinf_mod,Cl0w,alpha,theta_mid);
+twist_val = deg2rad([0, -1, -2, -3, -4, -5, -6, -7, -8]);
+n_twist   = length(twist_val);
 
-L  = rho*Qinf_mod*sum(gamma*dy_w);
-CL = L/(0.5*rho*Qinf_mod^2*Sw);
+CL     = zeros(1, n_twist);
+CD     = zeros(1, n_twist);
+CD_ind = zeros(1, n_twist);
+L      = zeros(1,n_twist);
+D      = zeros(1,n_twist);
 
+Cl_vec = zeros(Nw,n_twist);
+Cd_vec = zeros(Nw,n_twist);
 
-function gamma = computeWingConfig(Nw,P_w,P_w_mid,ur,cwi05,k_inf,Cla,Q_inf_mod,Cl0,alpha,thetai05) % Punt 1 de la part 2
+for ii = 1:n_twist
+
+    theta_mid = twist_val(ii)*(2*abs(P_w_mid(:,2))/b);
+    gamma     = computeWingConfig(Nw,P_w,P_w_mid,ur,cwi05,k_inf,Claw,Qinf_mod,Cl0w,alpha,theta_mid);
+
+    Cl_vec(:,ii) = (2*gamma)./(cwi05.*Qinf_mod);
+    Cd_visc_vec  = Cd_w(Cl_vec(:,ii));
+    alpha_ind    = (Cl_vec(:,ii) - Cl0w)/Claw - alpha - theta_mid;
+    Cd_ind_vec   = -2*gamma.*alpha_ind./(Qinf_mod.*cwi05);
+    Cd_vec(:,ii) = Cd_visc_vec + Cd_ind_vec;
     
-    a = zeros(Nw,Nw);
-    b = zeros(Nw,1);
-
-    for ii = 1:Nw
-        b(ii,1) = 0.5*cwi05(ii)*Q_inf_mod*(Cl0 + Cla*(alpha + thetai05(ii)));
-        for jj = 1:Nw
-            if ii == jj
-                v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_w_mid(ii,:),ur,'WingWing');
-                a(ii,jj) = -0.5*Cla*cwi05(ii)*dot(v,k_inf) + 1;
-            else
-                v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_w_mid(ii,:),ur,'WingWing');
-                a(ii,jj) = -0.5*Cla*cwi05(ii)*dot(v,k_inf);
-            end
-        end
-    end
-
-    gamma = a\b;
+    CL(1,ii)     = sum(Cl_vec(:,ii).*cwi05.*(P_w(2:end,2) - P_w(1:end-1,2)))/Sw;
+    CD(1,ii)     = sum(Cd_vec(:,ii).*cwi05.*(P_w(2:end,2) - P_w(1:end-1,2)))/Sw;
+    CD_ind(1,ii) = sum(Cd_ind_vec.*cwi05.*(P_w(2:end,2) - P_w(1:end-1,2)))/Sw;
+    L(1,ii)      = Qinf_mod*Sw*CL(1,ii);
+    D(1,ii)      = Qinf_mod*Sw*CD(1,ii);
 
 end
 
+% Post - process
+[~, idx_opt] = min(CD_ind);
+theta_cd_min_deg = rad2deg(twist_val(idx_opt));
+fprintf('Twist que minimitza CDind: theta_t = %+.2f°\n\n', theta_cd_min_deg);
+y_mid = (P_w(1:end-1,2) + P_w(2:end,2))/2;
+eta   = y_mid/(b/2);   % coordenada normalitzada
 
-function gamma = computeWingCanardConfig(Nw,Nh)
 
-    a = zeros(Nw+Nh,Nw+Nh);
-    b = zeros(Nw+Nh,1);
+theta_max_L_D = 0;
+valor_max     = 0;
 
-    for ii = 1:Nw
-        b(ii,1) = 0.5*cwi05(ii)*Q_inf_mod*(Cl0w + Claw*(alpha + thetai05(ii)));
-        for jj = 1:Nw
-            if ii == jj
-                v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_w_mid(ii,:),ur,'WingWing');
-                a(ii,jj) = -0.5*Claw*cwi05(ii)*dot(v,k_inf) + 1;
-            else
-                v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_w_mid(ii,:),ur,'WingWing');
-                a(ii,jj) = -0.5*Claw*cwi05(ii)*dot(v,k_inf);
-            end
-        end
-
-        for jj = 1:Nh
-            v = computeHSV(ii,jj,P_h(jj,:),P_h(jj+1,:),P_w_mid(ii,:),ur,'WingCnrd');
-            a(ii,Nw+jj) = -0.5*Claw*cwi05(ii)*dot(v,k_inf);
-        end
+for jj = 1:n_twist
+    valor = CL(jj)/CD(jj);
+    if valor > valor_max
+        valor_max = valor;
+        theta_max_L_D = rad2deg(twist_val(jj));
     end
-
-    for ii = 1:Nh
-        b(Nw+ii,1) = 0.5*chi05(ii)*Q_inf_mod*(Cl0h + Clah*alpha + i_h);
-        for jj = 1:Nh
-            if ii == jj
-                v = computeHSV(ii,jj,P_h(jj,:),P_h(jj+1,:),P_h_mid(ii,:),ur,'CnrdCnrd');
-                a(Nw+ii,Nw+jj) = -0.5*Clah*chi05(ii)*dot(v,k_inf) + 1;
-            else
-                v = computeHSV(ii,jj,P_h(jj,:),P_h(jj+1,:),P_h_mid(ii,:),ur,'CnrdCnrd');
-                a(Nw+ii,Nw+jj) = -0.5*Clah*chi05(ii)*dot(v,k_inf);
-            end
-        end
-
-        for jj = 1:Nw
-            v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_h_mid(ii,:),ur,'CnrdWing');
-            a(Nw+ii,jj) = -0.5*Clah*chi05(ii)*dot(v,k_inf);
-        end
-    end
-
-    gamma = a\b;
-
 end
+fprintf('Twist òptim (maximització L/D): theta_t = %+.2f°\n', theta_max_L_D);
+
+% Figures
+figure;
+cmap = parula(n_twist);
+hold on
+for jj = 1:n_twist
+    plot(eta, Cl_vec(:,jj), 'Color', cmap(jj,:), 'LineWidth', 0.5, 'DisplayName', sprintf('\\theta_t = %+.0f°', rad2deg(twist_val(jj))));
+end
+xlabel('2y/b','FontSize',12)
+ylabel('C_l','FontSize',12)
+title('Spanwise distribution of section lift coefficient','FontSize',12)
+legend('Location','south','NumColumns',3,'FontSize',9)
+grid on; xlim([-1 1])
+
+figure;
+cmap = parula(n_twist);
+hold on
+for jj = 1:n_twist
+    plot(eta, Cd_vec(:,jj), 'Color', cmap(jj,:), 'LineWidth', 0.5, 'DisplayName', sprintf('\\theta_t = %+.0f°', rad2deg(twist_val(jj))));
+end
+xlabel('2y/b','FontSize',12)
+ylabel('C_di','FontSize',12)
+title('Spanwise distribution of section induced drag coefficient','FontSize',12)
+legend('Location','south','NumColumns',3,'FontSize',9)
+grid on; xlim([-1 1])
+
+figure;
+subplot(1,2,1)
+plot(rad2deg(twist_val), CL, 'bo-','LineWidth',1,'MarkerFaceColor','b','MarkerSize',3)
+xlabel('\theta_t [°]','FontSize',11)
+ylabel('C_L','FontSize',11)
+title('Total Lift','FontSize',11)
+grid on; grid minor
+subplot(1,2,2)
+plot(rad2deg(twist_val), CD_ind, 'r^-','LineWidth',1,'MarkerFaceColor','r','MarkerSize',3,'DisplayName','C_{D,ind}')
+hold on
+plot(rad2deg(twist_val), CD, 'ks-','LineWidth',1,'MarkerFaceColor','k','MarkerSize',3,'DisplayName','C_{D,total}')
+xline(theta_cd_min_deg,'--','Color',[0 0.6 0],'LineWidth',1.5,'DisplayName','Minimum C_{d_{ind}}','Label',sprintf('\\theta_t=%+.0f°',theta_cd_min_deg))
+xline(theta_max_L_D,'--','Color',[0 0 0.6],'LineWidth',1.5,'DisplayName','Maximum C_L/C_D','Label',sprintf('\\theta_t=%+.0f°',theta_max_L_D))
+xlabel('\theta_t [°]','FontSize',11)
+ylabel('C_D','FontSize',11)
+title('Total Drag','FontSize',11)
+legend('Location','best','FontSize',9); grid on; grid minor
+sgtitle(sprintf('Wing twist effect | \\alpha = %.0f°', rad2deg(alpha)), 'FontSize',12,'FontWeight','bold')
+
+
+%% Study of the compete system - Wing, Canard and VTP
+
+% Falta especificar com inputs per aquesta funcio el Cl0 del canard (Cl0h),
+% el Clalpha del Canard (Clah) i el twist de l'ala thetai05, que es calcula
+% com thetai05 = twist_tip*(2*abs(P_w_mid(:,2))/b) on imagino que twist_tip
+% sera el trobat a l'apartat anterior que maximitza el CL/CD
+
+[gamma,gamma_w,gamma_h] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid,P_h_mid,cwi05,chi05,Qinf_mod,Cl0w,Cl0h,Claw,Clah,thetai05,i_h,alpha,ur,k_inf);
