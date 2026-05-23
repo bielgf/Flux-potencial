@@ -207,6 +207,9 @@ D      = zeros(1,n_twist);
 
 Cl_vec = zeros(Nw,n_twist);
 Cd_vec = zeros(Nw,n_twist);
+alpha_ind_vec = zeros(Nw, n_twist);
+Cd_visc_vec = zeros(Nw, n_twist);
+Cd_ind_vec_1 = zeros(Nw, n_twist);
 
 for ii = 1:n_twist
 
@@ -217,7 +220,11 @@ for ii = 1:n_twist
     Cd_visc_vec  = Cd_w(Cl_vec(:,ii));
     alpha_ind    = (Cl_vec(:,ii) - Cl0w)/Claw - alpha - theta_mid;
     Cd_ind_vec   = -2*gamma.*alpha_ind./(Qinf_mod.*cwi05);
+    
     Cd_vec(:,ii) = Cd_visc_vec + Cd_ind_vec;
+    Cd_ind_vec_1(:,ii) = Cd_ind_vec;
+    alpha_ind_vec(:,ii)   = alpha_ind;          
+    Cd_visc_vec_1(:,ii)     = Cd_visc_vec; 
     
     CL(1,ii)     = sum(Cl_vec(:,ii).*cwi05.*(P_w(2:end,2) - P_w(1:end-1,2)))/Sw;
     CD(1,ii)     = sum(Cd_vec(:,ii).*cwi05.*(P_w(2:end,2) - P_w(1:end-1,2)))/Sw;
@@ -247,7 +254,7 @@ for jj = 1:n_twist
 end
 fprintf('Twist òptim (maximització L/D): theta_t = %+.2f°\n', theta_max_L_D);
 
-% Figures
+% ── Spanwise lift ────
 figure;
 cmap = parula(n_twist);
 hold on
@@ -260,16 +267,45 @@ title('Spanwise distribution of section lift coefficient','FontSize',12)
 legend('Location','south','NumColumns',3,'FontSize',9)
 grid on; xlim([-1 1])
 
+% ── Spanwise total drag ───
 figure;
 cmap = parula(n_twist);
 hold on
 for jj = 1:n_twist
-    plot(eta, Cd_vec(:,jj), 'Color', cmap(jj,:), 'LineWidth', 0.5, 'DisplayName', sprintf('\\theta_t = %+.0f°', rad2deg(twist_val(jj))));
+    plot(eta, Cd_ind_vec_1(:,jj), 'Color', cmap(jj,:), 'LineWidth', 0.5, 'DisplayName', sprintf('\\theta_t = %+.0f°', rad2deg(twist_val(jj))));
 end
 xlabel('2y/b','FontSize',12)
 ylabel('C_di','FontSize',12)
 title('Spanwise distribution of section induced drag coefficient','FontSize',12)
 legend('Location','south','NumColumns',3,'FontSize',9)
+grid on; xlim([-1 1])
+
+% ── Spanwise viscous drag ────
+figure;
+cmap = parula(n_twist);
+hold on
+for jj = 1:n_twist
+    plot(eta, Cd_visc_vec_1(:,jj), 'Color', cmap(jj,:), 'LineWidth', 0.5, ...
+        'DisplayName', sprintf('\\theta_t = %+.0f°', rad2deg(twist_val(jj))));
+end
+xlabel('2y/b', 'FontSize', 12)
+ylabel('C_{d,visc}', 'FontSize', 12)
+title('Spanwise distribution of section viscous drag coefficient', 'FontSize', 12)
+legend('Location', 'south', 'NumColumns', 3, 'FontSize', 9)
+grid on; xlim([-1 1])
+
+% ── Spanwise induced angle of attack ───
+figure;
+cmap = parula(n_twist);
+hold on
+for jj = 1:n_twist
+    plot(eta, rad2deg(alpha_ind_vec(:,jj)), 'Color', cmap(jj,:), 'LineWidth', 0.5, ...
+        'DisplayName', sprintf('\\theta_t = %+.0f°', rad2deg(twist_val(jj))));
+end
+xlabel('2y/b', 'FontSize', 12)
+ylabel('\alpha_{ind} [°]', 'FontSize', 12)
+title('Spanwise distribution of induced angle of attack', 'FontSize', 12)
+legend('Location', 'south', 'NumColumns', 3, 'FontSize', 9)
 grid on; xlim([-1 1])
 
 figure;
@@ -291,6 +327,13 @@ title('Total Drag','FontSize',11)
 legend('Location','best','FontSize',9); grid on; grid minor
 sgtitle(sprintf('Wing twist effect | \\alpha = %.0f°', rad2deg(alpha)), 'FontSize',12,'FontWeight','bold')
 
+figure;
+plot(rad2deg(twist_val), CL./CD, 'bo-', 'LineWidth', 1,'MarkerFaceColor', 'b', 'MarkerSize', 5)
+xline(theta_max_L_D, '--', 'Color', 'k', 'LineWidth', 1.5,'Label', sprintf('\\theta_t = %+.0f°', theta_max_L_D))
+xlabel('\theta_t [°]', 'FontSize', 12)
+ylabel('C_L / C_D', 'FontSize', 12)
+title('Lift-to-drag ratio vs wing tip twist | \alpha = 4°', 'FontSize', 12)
+grid on; grid minor
 
 %% Study of the compete system - Wing, Canard and VTP
 
