@@ -6,13 +6,14 @@
 %------------------------------------------------------------------%
 
 
-%% -------------------------------------------------------------- %%
+% ---------------------------------------------------------------- %
 % ---------- PART 1: THE CONSTANT STRENGTH VORTEX METHOD --------- %
 % ---------- APPLIED TO SIMPLE AND TWO-ELEMENT AIRFOILS ---------- %
+% ---------------------------------------------------------------- %
 
 clear;clc;close all
 
-%% HQ300 airfoil study
+%------------------ HQ300 AIRFOIL STUDY -------------------%
 
 alpha = deg2rad(0:2:8);
 Ndiv  = [16, 32, 64, 128, 256, 512];
@@ -95,10 +96,10 @@ subsection  = 5;  % 4 or 5
 switch subsection
     case 4
         alpha   = deg2rad(0:2:8);
-        delta_e = deg2rad([0;0;0;0;0]);
+        delta_e = [0;0;0;0;0];
     case 5
         alpha   = deg2rad([4;4;4;4;4]);
-        delta_e = deg2rad(0:4:16);
+        delta_e = 0:4:16;
     otherwise
         disp('Incorrect exercise subsection')
 end
@@ -140,25 +141,27 @@ if subsection == 4; plotCLandCM14vsalpha(alpha,CL_table,CM14_table); end
 if subsection == 5; plotCLandCM14vsdelta(delta_e,CL_table,CM14_table); end
 
 %% ------------------------------------------------------------------- %%
-% ---------- PART 2: PRANDTL’S LIFTING LINE MODEL --------------------- %
+% --------------- PART 2: PRANDTL-S LIFTING LINE MODEL ---------------- %
 % ---------- APPLIED TO COMPOUND WINGS OF LARGE ASPECT RATIO ---------- %
+% --------------------------------------------------------------------- %
 
-
-% Input Data
+%---------------------- INPUT DATA -----------------------%
 
 % Geometric Data
-b    = 15;
-b_h  = 3;
-c_r  = 0.95;
-c_rh = 0.5;
-c_t  = 0.55;
-c_th = 0.3;
-l_h  = 4;
-l_v  = 1.2;
-Sv   = 1.5;
-i_w  = 0;
-i_h  = deg2rad(3);
-Sw   = (c_r + c_t)/2*b;
+b      = 15;
+b_h    = 3;
+c_r    = 0.95;
+c_rh   = 0.5;
+c_t    = 0.55;
+c_th   = 0.3;
+l_h    = 4;
+l_v    = 1.2;
+Sv     = 1.5;
+i_w    = 0;
+i_h    = deg2rad(3);
+Sw     = (c_r + c_t)/2*b;
+lambda = c_t/c_r;
+c_bar  = (2/3)*c_r*(1 + lambda + lambda^2)/(1 + lambda); % MAC mean aerodynamic chord [m]
 
 % Numerical Data
 Nw = 512;
@@ -178,8 +181,8 @@ Cd_w = @(Clw) 0.0183*Clw.^2 - 0.0302*Clw + 0.0187;
 Cd_h = @(Clh) 0.0052*Clh^2 + 0.0071;
 Cd_v = 0.0062;
 
+%---------- GEOMETRIC DISCRETIZATION OF THE W-C ----------%
 
-% Geometric discretization of the wing-canard configuration
 dy_w = b/Nw;
 dy_h = b_h/Nh;
 yP_w = -b/2:dy_w:b/2;
@@ -193,8 +196,7 @@ P_h_mid = [l_h*ones(1,size(yP_h,2)-1) ; (yP_h(1:end-1)+yP_h(2:end))/2 ; zeros(1,
 cwi05     = c_r + (c_t - c_r)*(2*abs(P_w_mid(:,2))/b);
 chi05     = c_rh + (c_th - c_rh)*(2*abs(P_h_mid(:,2))/b_h);
 
-
-%% Study of the wing isolated - HQ300
+%---------- STUDY OF THE WING ISOLATED - HQ300 -----------%
 
 twist_val = deg2rad([0, -1, -2, -3, -4, -5, -6, -7, -8]);
 n_twist   = length(twist_val);
@@ -237,10 +239,10 @@ end
 % Post - process
 [~, idx_opt] = min(CD_ind);
 theta_cd_min_deg = rad2deg(twist_val(idx_opt));
-fprintf('Twist que minimitza CDind: theta_t = %+.2f°\n\n', theta_cd_min_deg);
+fprintf('--- RESULTS (PART 2, SECTION 1) ---\n');
+fprintf('Twist que minimitza CDind: theta_t = %+.2f°\n', theta_cd_min_deg);
 y_mid = (P_w(1:end-1,2) + P_w(2:end,2))/2;
 eta   = y_mid/(b/2);   % coordenada normalitzada
-
 
 theta_max_L_D = 0;
 valor_max     = 0;
@@ -252,7 +254,8 @@ for jj = 1:n_twist
         theta_max_L_D = rad2deg(twist_val(jj));
     end
 end
-fprintf('Twist òptim (maximització L/D): theta_t = %+.2f°\n', theta_max_L_D);
+
+fprintf('Twist òptim (maximització L/D): theta_t = %+.2f°\n\n', theta_max_L_D);
 
 % ── Spanwise lift ────
 figure;
@@ -335,11 +338,63 @@ ylabel('C_L / C_D', 'FontSize', 12)
 title('Lift-to-drag ratio vs wing tip twist | \alpha = 4°', 'FontSize', 12)
 grid on; grid minor
 
-%% Study of the compete system - Wing, Canard and VTP
+%-------- STUDY OF THE COMPLETE SYSTEM (W C VTP) ---------%
 
-% Falta especificar com inputs per aquesta funcio el Cl0 del canard (Cl0h),
-% el Clalpha del Canard (Clah) i el twist de l'ala thetai05, que es calcula
-% com thetai05 = twist_tip*(2*abs(P_w_mid(:,2))/b) on imagino que twist_tip
-% sera el trobat a l'apartat anterior que maximitza el CL/CD
+Cl0h      = 0;                           % De la Part 1, Apartat 4
+Clah      = (0.902768 - 0)/deg2rad(8);   % De la Part 1, Apartat 4
+twist_tip = deg2rad(-4);
+thetai05  = twist_tip*(2*abs(P_w_mid(:,2))/b);
+Cm14_w    = -0.137646601546106;          % De la Part 1, Apartat 1: alpha 4
+Cm14_h    = -0.00392674256567270;        % De la Part 1, Apartat 5: alpha 4, delta 0
 
 [gamma,gamma_w,gamma_h] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid,P_h_mid,cwi05,chi05,Qinf_mod,Cl0w,Cl0h,Claw,Clah,thetai05,i_h,alpha,ur,k_inf);
+
+% 2. Spanwise distribution of aerodynamic coefficients and CM location
+% (M_CM = 0) alpha = 4, delta = 0
+
+alpha = deg2rad(4);
+[Cl_y_w, Cl_y_h, Cd_y_w, Cd_y_h, CM_loc] = computeWingCanardAerodynamics(gamma_w,gamma_h,alpha,cwi05,chi05,Qinf_mod,Cl0w,Cl0h,Claw,Clah,thetai05,i_h,rho,dy_w,dy_h,l_h,Cm14_w,Cm14_h);
+
+figure
+plot(2*P_w_mid(:,2)/b, Cl_y_w, 'b', 2*P_h_mid(:,2)/b, Cl_y_h, 'r'); title('C_l distribution');
+xlabel('2y/b'); ylabel('C_l'); grid on;
+legend('Wing', 'Canard');
+
+figure
+plot(2*P_w_mid(:,2)/b, Cd_y_w, 'b', 2*P_h_mid(:,2)/b, Cd_y_h, 'r'); title('C_d distribution');
+xlabel('2y/b'); ylabel('C_d'); grid on;
+legend('Wing', 'Canard');
+
+figure
+plot(2*P_w_mid(:,2)/b, gamma_w, 'b', 2*P_h_mid(:,2)/b, gamma_h, 'r'); title('\Gamma distribution');
+xlabel('2y/b'); ylabel('\Gamma'); grid on;
+legend('Wing', 'Canard');
+
+% 3. Polar Aerodynamic Curve for delta = 0
+
+polarAerodynamicPlot(Nw,Nh,P_w,P_h,P_w_mid,P_h_mid,cwi05,chi05,Qinf_mod,Cl0w,Cl0h,...
+    Claw,Clah,thetai05,i_h,ur,k_inf,rho,dy_w,dy_h,Sw,Sv)
+
+% 4. C_L and C_M for alpha = 4 and delta = 12
+
+Cl_d12     = 1.35886186085913;     % Part 1, Apartat 5: alpha 4, delta 12
+Cm14_h_d12 = -0.149491168047198;   % Part 1, Apartat 5: alpha 4, delta 12
+
+alpha = deg2rad(4);
+Cl0h_eff = Cl_d12 - Clah * alpha; % elevator effect
+[~, gamma_w_d, gamma_h_d] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid,P_h_mid,...
+                             cwi05,chi05,Qinf_mod,Cl0w,Cl0h_eff,Claw,Clah,thetai05,i_h,alpha,ur,k_inf);
+
+L_w_d         = sum(rho * Qinf_mod * gamma_w_d .* dy_w);
+L_h_d         = sum(rho * Qinf_mod * gamma_h_d .* dy_h);
+CL_global_d12 = (L_w_d + L_h_d) / (0.5 * rho * Qinf_mod^2 * Sw);
+
+M14_w_d    = sum(0.5 * rho * Qinf_mod^2 * cwi05.^2 * Cm14_w .* dy_w);
+M14_h_d    = sum(0.5 * rho * Qinf_mod^2 * chi05.^2 * Cm14_h_d12 .* dy_h); 
+M_CM_total = M14_w_d - L_w_d * CM_loc + M14_h_d + L_h_d * (l_h - CM_loc);
+
+Cm_global_d12 = M_CM_total / (0.5 * rho * Qinf_mod^2 * Sw * c_bar);
+
+fprintf('--- RESULTS (PART 2, SECTION 4) ---\n');
+fprintf('Global lift coefficient (C_L): %.4f\n', CL_global_d12);
+fprintf('Pitching moment coefficient about CM (C_m,cm): %.4f\n', Cm_global_d12);

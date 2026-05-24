@@ -1,4 +1,5 @@
 function plotCpChordDistribution2(X, cp, alpha, delta, Ndiv1, Ndiv2)
+
     % Forzamos que cp sea un vector columna para evitar errores de dimensiones
     cp = cp(:); 
 

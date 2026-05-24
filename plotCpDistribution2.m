@@ -1,4 +1,7 @@
 function plotCpDistribution2(X, Nc, Xc, cp, alpha, delta, Ndiv1, Ndiv2)
+
+    delta = deg2rad(delta);
+
     % --- AJUSTE DE DIMENSIONES ---
     cp = cp(:);
     totalPanels = Ndiv1 + Ndiv2;
