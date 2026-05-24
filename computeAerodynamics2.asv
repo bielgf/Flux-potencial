@@ -10,15 +10,28 @@ function [CL,L,CM1_4,M1_4,CM0,cp,CL_comp] = computeAerodynamics2(Ndiv1,Ndiv2,geo
 
     cl      = zeros(Ntotal,1);
     cp      = zeros(Ntotal,1);
-    cm1_4   = zeros(Ntotal,1);
+    % cm1_4   = zeros(Ntotal,1);
     cm0     = zeros(Ntotal,1);
     cp_comp = zeros(Ntotal,1);
     cl_comp = zeros(Ntotal,2);
 
+    
+    X1025 = geom.X(1:Ndiv1+1,1) - 0.25;
+    Z1025 = geom.X(1:Ndiv1+1,2);
+    
+    DX1025 = X1025(2:end) - X1025(1:end-1);
+    DZ1025 = Z1025(2:end) - Z1025(1:end-1);
+
+    X2025 = geom.X(Ndiv1+2:Ndiv2,1) - 0.25;
+    Z2025 = geom.X(Ndiv1+2:Ndiv2,2);
+    
+    DX2025 = X2025(2:end) - X2025(1:end-1);
+    DZ2025 = Z2025(2:end) - Z2025(1:end-1);
+
     for ii=1:Ntotal
         cl(ii)       = 2*gamma(ii)*l(ii)/Qinfmod;
         cp(ii)       = 1 - (gamma(ii)/Qinfmod)^2;
-        cm1_4(ii)    = cp(ii)*((Xc(ii,1)/c - 0.25)*(delta(ii,1)/c) + (Xc(ii,2)/c)*(delta(ii,2)/c));
+        % cm1_4(ii)    = cp(ii)*((Xc(ii,1)/c - 0.25)*(delta(ii,1)/c) + (Xc(ii,2)/c)*(delta(ii,2)/c));
         cm0(ii)      = cp(ii)*((Xc(ii,1)/c)*(delta(ii,1)/c) + (Xc(ii,2)/c)*(delta(ii,2)/c));
 
         cp_comp(ii)   = cp(ii)/(sqrt(1 - Minf^2) + (Minf^2/(1 + sqrt(1 - Minf^2)))*(cp(ii)/2));
@@ -26,9 +39,13 @@ function [CL,L,CM1_4,M1_4,CM0,cp,CL_comp] = computeAerodynamics2(Ndiv1,Ndiv2,geo
         cl_comp(ii,2) = cp_comp(ii)*l(ii)*Nc(ii,2);
     end
 
+    Cm1025i = cp(1:Ndiv1)'.*(Xc(1:Ndiv1,1).*DX1025 + Xc(:,2).*DZ1025);
+    Cm2025i = cp(Ndiv1+1:Ndiv2)'.*(Xc(:,1).*DX2025 + Xc(:,1).*DZ2025);
+    CM1_4 = sum(Cm1025i)+sum(Cm2025i);
+
     CL    = sum(cl);
     L     = CL*0.5*Qinfmod^2*2*c*rho;
-    CM1_4 = sum(cm1_4);
+    % CM1_4 = sum(cm1_4_1) + sum(cm1_4_2);
     M1_4  = CM1_4*0.5*rho*Qinfmod^2*c^2;
     CM0   = sum(cm0);
 

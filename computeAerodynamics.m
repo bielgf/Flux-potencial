@@ -19,7 +19,7 @@ function [CL,L,CM1_4,M1_4,CM0,cp,CL_comp] = computeAerodynamics(Ndiv,geom,gamma,
         cm1_4(ii)    = cp(ii)*((Xc(ii,1)/c - 0.25)*(delta(ii,1)/c) + (Xc(ii,2)/c)*(delta(ii,2)/c));
         cm0(ii)      = cp(ii)*((Xc(ii,1)/c)*(delta(ii,1)/c) + (Xc(ii,2)/c)*(delta(ii,2)/c));
 
-        cp_comp(ii)    = cp(ii)/(sqrt(1 - Minf^2) + (Minf^2/(1 + sqrt(1 - Minf^2)))*(cp(ii)/2));
+        cp_comp(ii)   = cp(ii)/(sqrt(1 - Minf^2) + (Minf^2/(1 + sqrt(1 - Minf^2)))*(cp(ii)/2));
         cl_comp(ii,1) = cp_comp(ii)*l(ii)*Nc(ii,1);
         cl_comp(ii,2) = cp_comp(ii)*l(ii)*Nc(ii,2);
     end

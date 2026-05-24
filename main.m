@@ -207,11 +207,12 @@ CD_ind = zeros(1, n_twist);
 L      = zeros(1,n_twist);
 D      = zeros(1,n_twist);
 
-Cl_vec = zeros(Nw,n_twist);
-Cd_vec = zeros(Nw,n_twist);
+Cl_vec        = zeros(Nw,n_twist);
+Cd_vec        = zeros(Nw,n_twist);
 alpha_ind_vec = zeros(Nw, n_twist);
-Cd_visc_vec = zeros(Nw, n_twist);
-Cd_ind_vec_1 = zeros(Nw, n_twist);
+Cd_visc_vec   = zeros(Nw, n_twist);
+Cd_ind_vec_1  = zeros(Nw, n_twist);
+Cd_visc_vec_1 = zeros(Nw, n_twist);
 
 for ii = 1:n_twist
 
@@ -223,10 +224,10 @@ for ii = 1:n_twist
     alpha_ind    = (Cl_vec(:,ii) - Cl0w)/Claw - alpha - theta_mid;
     Cd_ind_vec   = -2*gamma.*alpha_ind./(Qinf_mod.*cwi05);
     
-    Cd_vec(:,ii) = Cd_visc_vec + Cd_ind_vec;
-    Cd_ind_vec_1(:,ii) = Cd_ind_vec;
-    alpha_ind_vec(:,ii)   = alpha_ind;          
-    Cd_visc_vec_1(:,ii)     = Cd_visc_vec; 
+    Cd_vec(:,ii)        = Cd_visc_vec + Cd_ind_vec;
+    Cd_ind_vec_1(:,ii)  = Cd_ind_vec;
+    alpha_ind_vec(:,ii) = alpha_ind;          
+    Cd_visc_vec_1(:,ii) = Cd_visc_vec; 
     
     CL(1,ii)     = sum(Cl_vec(:,ii).*cwi05.*(P_w(2:end,2) - P_w(1:end-1,2)))/Sw;
     CD(1,ii)     = sum(Cd_vec(:,ii).*cwi05.*(P_w(2:end,2) - P_w(1:end-1,2)))/Sw;

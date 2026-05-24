@@ -40,7 +40,7 @@ end
 % Airfoils altogether
 
 geom.X = [X1; X2];
-geom.c = c1 + c2;
+geom.c = c1 + c2 + d;
 
 Ntotal = Ndiv_main + Ndiv_second; 
 geom.l     = zeros(Ntotal,1);
