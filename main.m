@@ -145,6 +145,7 @@ if subsection == 5; plotCLandCM14vsdelta(delta_e,CL_table,CM14_table); end
 % ---------- APPLIED TO COMPOUND WINGS OF LARGE ASPECT RATIO ---------- %
 % --------------------------------------------------------------------- %
 
+clc; clear;
 %---------------------- INPUT DATA -----------------------%
 
 % Geometric Data
@@ -154,7 +155,7 @@ c_r    = 0.95;
 c_rh   = 0.5;
 c_t    = 0.55;
 c_th   = 0.3;
-l_h    = 4;
+l_h    = -4;
 l_v    = 1.2;
 Sv     = 1.5;
 i_w    = 0;
@@ -198,7 +199,7 @@ chi05     = c_rh + (c_th - c_rh)*(2*abs(P_h_mid(:,2))/b_h);
 
 %---------- STUDY OF THE WING ISOLATED - HQ300 -----------%
 
-twist_val = deg2rad(0:-0.02:-8);
+twist_val = deg2rad(0:-1:-8);
 n_twist   = length(twist_val);
 
 CL     = zeros(1, n_twist);
@@ -344,42 +345,131 @@ grid on; grid minor
 Cl0h      = 0;                           % De la Part 1, Apartat 4
 Clah      = (0.902768 - 0)/deg2rad(8);   % De la Part 1, Apartat 4
 twist_tip = deg2rad(-3.84);
-thetai05  = wist_tip*(2*abs(P_w_mid(:,2))/b);
-Cm14_w    = ;          % De la Part 1, Apartat 1: alpha 4
-Cm14_h    = 1;        % De la Part 1, Apartat 5: alpha 4, delta 0
+thetai05  = twist_tip*(2*abs(P_w_mid(:,2))/b);
+Cm14_w    = -0.1376;                     % De la Part 1, Apartat 1: alpha 4
+Cm14_h    = -0.0015;                     % De la Part 1, Apartat 5: alpha 4, delta 0
 
-[gamma,gamma_w,gamma_h] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid,P_h_mid,cwi05,chi05,Qinf_mod,Cl0w,Cl0h,Claw,Clah,thetai05,i_h,alpha,ur,k_inf);
 
 % 2. Spanwise distribution of aerodynamic coefficients and CM location
 % (M_CM = 0) alpha = 4, delta = 0
 
 alpha = deg2rad(4);
-[Cl_y_w, Cl_y_h, Cd_y_w, Cd_y_h, CM_loc] = computeWingCanardAerodynamics(gamma_w,gamma_h,alpha,cwi05,chi05,Qinf_mod,Cl0w,Cl0h,Claw,Clah,thetai05,i_h,rho,dy_w,dy_h,l_h,Cm14_w,Cm14_h);
+[gamma,gamma_w,gamma_h] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid,P_h_mid,cwi05,...
+    chi05,Qinf_mod,Cl0w,Cl0h,Claw,Clah,thetai05,i_h,alpha,ur,k_inf);
+[Cl_y_w, Cl_y_h, Cdi_y_w, Cdp_y_w, Cd_y_w, Cdi_y_h, Cdp_y_h, Cd_y_h, CM_loc] = computeWingCanardAerodynamics(gamma_w,gamma_h,...
+    alpha,cwi05,chi05,Qinf_mod,Cl0w,Cl0h,Claw,Clah,thetai05,i_h,rho,dy_w,dy_h,l_h,Cm14_w,Cm14_h);
 
-figure
-plot(2*P_w_mid(:,2)/b, Cl_y_w, 'b', 2*P_h_mid(:,2)/b, Cl_y_h, 'r'); title('C_l distribution');
-xlabel('2y/b'); ylabel('C_l'); grid on;
-legend('Wing', 'Canard');
+% Isolated wing
+Cl0h_iso = 0; 
+Clah_iso = 0;
+[~, gamma_w_iso, ~] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid,P_h_mid,cwi05,chi05,...
+    Qinf_mod,Cl0w,Cl0h_iso,Claw,Clah_iso,thetai05,i_h,alpha,ur,k_inf);
+[Cl_y_w_iso, ~, Cdi_y_w_iso, Cdp_y_w_iso, Cd_y_w_iso, ~, ~, ~, ~] = computeWingCanardAerodynamics(gamma_w_iso,zeros(size(gamma_h)),...
+    alpha,cwi05,chi05,Qinf_mod,Cl0w,Cl0h_iso,Claw,Clah_iso,thetai05,i_h,rho,dy_w,dy_h,l_h,Cm14_w,Cm14_h);
 
-figure
-plot(2*P_w_mid(:,2)/b, Cd_y_w, 'b', 2*P_h_mid(:,2)/b, Cd_y_h, 'r'); title('C_d distribution');
-xlabel('2y/b'); ylabel('C_d'); grid on;
-legend('Wing', 'Canard');
+% Isolated canard
+Cl0w_iso = 0; 
+Claw_iso = 0;
+[~, ~, gamma_h_iso] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid,P_h_mid,cwi05,chi05,...
+    Qinf_mod,Cl0w_iso,Cl0h,Claw_iso,Clah,thetai05,i_h,alpha,ur,k_inf);
+[~, Cl_y_h_iso, ~, ~, ~, Cdi_y_h_iso, Cdp_y_h_iso, Cd_y_h_iso, ~] = computeWingCanardAerodynamics(zeros(size(gamma_w)),gamma_h_iso,...
+    alpha,cwi05,chi05,Qinf_mod,Cl0w_iso,Cl0h,Claw_iso,Clah,thetai05,i_h,rho,dy_w,dy_h,l_h,Cm14_w,Cm14_h);
 
-figure
-plot(2*P_w_mid(:,2)/b, gamma_w, 'b', 2*P_h_mid(:,2)/b, gamma_h, 'r'); title('\Gamma distribution');
-xlabel('2y/b'); ylabel('\Gamma'); grid on;
-legend('Wing', 'Canard');
+
+% Gamma and Cl
+figure('Units', 'normalized', 'Position', [0.1, 0.2, 0.8, 0.45]);
+t = tiledlayout(1,2,'TileSpacing','compact');
+% --- TILE 1: Gamma ---
+ax1 = nexttile;
+hold on; box on;
+plot(2*P_w_mid(:,2)/b, gamma_w, 'b');
+plot(2*P_h_mid(:,2)/b, gamma_h, 'r');
+plot(2*P_w_mid(:,2)/b, gamma_w_iso, 'b--');
+plot(2*P_h_mid(:,2)/b, gamma_h_iso, 'r--');
+xlabel('2y/b');
+ylabel('Circulation, \Gamma [m^2/s]');
+title('Circulation distribution (\Gamma)');
+grid on;
+set(gca, 'GridAlpha', 0.15);
+% --- TILE 2: Cl ---
+ax2 = nexttile;
+hold on; box on;
+plot(2*P_w_mid(:,2)/b, Cl_y_w, 'b');
+plot(2*P_h_mid(:,2)/b, Cl_y_h, 'r');
+plot(2*P_w_mid(:,2)/b, Cl_y_w_iso, 'b--');
+plot(2*P_h_mid(:,2)/b, Cl_y_h_iso, 'r--');
+xlabel('2y/b');
+ylabel('Local lift coefficient, C_l');
+title('Lift distribution (C_l)');
+grid on;
+set(gca, 'GridAlpha', 0.15);
+
+lgd = legend(ax2, ...
+    'Wing (Complete System)', ...
+    'Canard (Complete System)', ...
+    'Wing (Isolated)', ...
+    'Canard (Isolated)');
+lgd.Layout.Tile = 'east';
+
+
+% Cdi, Cdp and Cd
+figure('Units', 'normalized', 'Position', [0.1, 0.1, 0.8, 0.8]);
+t = tiledlayout(2,2,'TileSpacing','compact');
+% --- TILE 1: Cdi ---
+ax1 = nexttile;
+hold on; box on;
+plot(2*P_w_mid(:,2)/b, Cdi_y_w, 'b');
+plot(2*P_h_mid(:,2)/b, Cdi_y_h, 'r');
+plot(2*P_w_mid(:,2)/b, Cdi_y_w_iso, 'b--');
+plot(2*P_h_mid(:,2)/b, Cdi_y_h_iso, 'r--');
+xlabel('2y/b');
+ylabel('Local induced drag coefficient, C_{di}');
+title('Induced drag distribution (C_{di})');
+grid on;
+set(gca, 'GridAlpha', 0.15);
+% --- TILE 2: Cdp ---
+ax2 = nexttile;
+hold on; box on;
+plot(2*P_w_mid(:,2)/b, Cdp_y_w, 'b');
+plot(2*P_h_mid(:,2)/b, Cdp_y_h, 'r');
+plot(2*P_w_mid(:,2)/b, Cdp_y_w_iso, 'b--');
+plot(2*P_h_mid(:,2)/b, Cdp_y_h_iso, 'r--');
+xlabel('2y/b');
+ylabel('Local viscous drag coefficient, C_{dp}');
+title('Viscous drag distribution (C_{dp})');
+grid on;
+set(gca, 'GridAlpha', 0.15);
+% --- TILE 3: Cd ---
+ax3 = nexttile;
+hold on; box on;
+plot(2*P_w_mid(:,2)/b, Cd_y_w, 'b');
+plot(2*P_h_mid(:,2)/b, Cd_y_h, 'r');
+plot(2*P_w_mid(:,2)/b, Cd_y_w_iso, 'b--');
+plot(2*P_h_mid(:,2)/b, Cd_y_h_iso, 'r--');
+xlabel('2y/b');
+ylabel('Local drag coefficient, C_d');
+title('Drag distribution (C_d)');
+grid on;
+set(gca, 'GridAlpha', 0.15);
+
+lgd = legend(ax3, ...
+    'Wing (Complete System)', ...
+    'Canard (Complete System)', ...
+    'Wing (Isolated)', ...
+    'Canard (Isolated)');
+lgd.Layout.Tile = 4;
+
 
 % 3. Polar Aerodynamic Curve for delta = 0
 
 polarAerodynamicPlot(Nw,Nh,P_w,P_h,P_w_mid,P_h_mid,cwi05,chi05,Qinf_mod,Cl0w,Cl0h,...
     Claw,Clah,thetai05,i_h,ur,k_inf,rho,dy_w,dy_h,Sw,Sv)
 
+
 % 4. C_L and C_M for alpha = 4 and delta = 12
 
-Cl_d12     = 1.35886186085913;     % Part 1, Apartat 5: alpha 4, delta 12
-Cm14_h_d12 = -0.149491168047198;   % Part 1, Apartat 5: alpha 4, delta 12
+Cl_d12     = 1.3589;          % Part 1, Apartat 5: alpha 4, delta 12
+Cm14_h_d12 = -0.1368;         % Part 1, Apartat 5: alpha 4, delta 12
 
 alpha = deg2rad(4);
 Cl0h_eff = Cl_d12 - Clah * alpha;  % elevator effect
@@ -398,4 +488,4 @@ Cm_global_d12 = M_CM_total / (0.5 * rho * Qinf_mod^2 * Sw * c_bar);
 
 fprintf('--- RESULTS (PART 2, SECTION 4) ---\n');
 fprintf('Global lift coefficient (C_L): %.4f\n', CL_global_d12);
-fprintf('Pitching moment coefficient about CM (C_m,cm): %.4f\n', Cm_global_d12);
+fprintf('Pitching moment coefficient about CM (C_m,CM): %.4f\n', Cm_global_d12);
