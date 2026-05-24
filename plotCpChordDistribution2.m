@@ -48,5 +48,5 @@ function plotCpChordDistribution2(X, cp, alpha, delta, Ndiv1, Ndiv2)
     title('PRESSURE COEFFICIENT DISTRIBUTION','FontName','Times New Roman');
     
     cp_min = min(cp);
-    text(0.1, 0.90*cp_min, sprintf('\\alpha = %gº | \\delta = %gº ', rad2deg(alpha), rad2deg(delta)), 'FontName','Times New Roman');
+    text(0.1, 0.90*cp_min, sprintf('\\alpha = %gº | \\delta = %gº ', rad2deg(alpha), delta), 'FontName','Times New Roman');
 end

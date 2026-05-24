@@ -198,14 +198,14 @@ chi05     = c_rh + (c_th - c_rh)*(2*abs(P_h_mid(:,2))/b_h);
 
 %---------- STUDY OF THE WING ISOLATED - HQ300 -----------%
 
-twist_val = deg2rad([0, -1, -2, -3, -4, -5, -6, -7, -8]);
+twist_val = deg2rad(0:-0.02:-8);
 n_twist   = length(twist_val);
 
 CL     = zeros(1, n_twist);
 CD     = zeros(1, n_twist);
 CD_ind = zeros(1, n_twist);
-L      = zeros(1,n_twist);
-D      = zeros(1,n_twist);
+L      = zeros(1, n_twist);
+D      = zeros(1, n_twist);
 
 Cl_vec        = zeros(Nw,n_twist);
 Cd_vec        = zeros(Nw,n_twist);
@@ -332,21 +332,21 @@ legend('Location','best','FontSize',9); grid on; grid minor
 sgtitle(sprintf('Wing twist effect | \\alpha = %.0f°', rad2deg(alpha)), 'FontSize',12,'FontWeight','bold')
 
 figure;
-plot(rad2deg(twist_val), CL./CD, 'bo-', 'LineWidth', 1,'MarkerFaceColor', 'b', 'MarkerSize', 5)
-xline(theta_max_L_D, '--', 'Color', 'k', 'LineWidth', 1.5,'Label', sprintf('\\theta_t = %+.0f°', theta_max_L_D))
+plot(rad2deg(twist_val), CL./CD, 'bo-', 'LineWidth', 1,'MarkerFaceColor', 'b', 'MarkerSize', 2)
+xline(theta_max_L_D, '--', 'Color', 'k', 'LineWidth', 1.5, 'Label', sprintf('\\theta_t = %.2f°', theta_max_L_D), 'LabelVerticalAlignment', 'middle');
 xlabel('\theta_t [°]', 'FontSize', 12)
 ylabel('C_L / C_D', 'FontSize', 12)
 title('Lift-to-drag ratio vs wing tip twist | \alpha = 4°', 'FontSize', 12)
 grid on; grid minor
 
-%-------- STUDY OF THE COMPLETE SYSTEM (W C VTP) ---------%
+%%%%%%%%-------- STUDY OF THE COMPLETE SYSTEM (W C VTP) ---------%%%%%%%%
 
 Cl0h      = 0;                           % De la Part 1, Apartat 4
 Clah      = (0.902768 - 0)/deg2rad(8);   % De la Part 1, Apartat 4
-twist_tip = deg2rad(-4);
-thetai05  = twist_tip*(2*abs(P_w_mid(:,2))/b);
-Cm14_w    = -0.137646601546106;          % De la Part 1, Apartat 1: alpha 4
-Cm14_h    = -0.00392674256567270;        % De la Part 1, Apartat 5: alpha 4, delta 0
+twist_tip = deg2rad(-3.84);
+thetai05  = wist_tip*(2*abs(P_w_mid(:,2))/b);
+Cm14_w    = ;          % De la Part 1, Apartat 1: alpha 4
+Cm14_h    = 1;        % De la Part 1, Apartat 5: alpha 4, delta 0
 
 [gamma,gamma_w,gamma_h] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid,P_h_mid,cwi05,chi05,Qinf_mod,Cl0w,Cl0h,Claw,Clah,thetai05,i_h,alpha,ur,k_inf);
 
@@ -382,7 +382,7 @@ Cl_d12     = 1.35886186085913;     % Part 1, Apartat 5: alpha 4, delta 12
 Cm14_h_d12 = -0.149491168047198;   % Part 1, Apartat 5: alpha 4, delta 12
 
 alpha = deg2rad(4);
-Cl0h_eff = Cl_d12 - Clah * alpha; % elevator effect
+Cl0h_eff = Cl_d12 - Clah * alpha;  % elevator effect
 [~, gamma_w_d, gamma_h_d] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid,P_h_mid,...
                              cwi05,chi05,Qinf_mod,Cl0w,Cl0h_eff,Claw,Clah,thetai05,i_h,alpha,ur,k_inf);
 

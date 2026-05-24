@@ -32,7 +32,7 @@ figure;
 plot(CD_total, CL_total, 'o-', 'LineWidth', 1.5);
 xlabel('C_D (Global Drag Coefficient)');
 ylabel('C_L (Global Lift Coefficient)');
-title('Aerodynamic Polar Curve of the Glider (\alpha 0 to 6)');
+title('Aerodynamic Polar Curve of the Glider (\alpha from 0° to 6°])');
 grid on;
 
 end 
