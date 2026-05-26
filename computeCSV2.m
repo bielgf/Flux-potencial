@@ -1,6 +1,4 @@
-function gamma = computeCSV2(Ndiv,geom,Qinf)
-
-    Ntotal = 2*Ndiv;
+function gamma = computeCSV2(Ndiv_main,Ndiv_second,geom,Qinf)
 
     Tc   = geom.Tc;
     Xc   = geom.Xc;
@@ -9,28 +7,32 @@ function gamma = computeCSV2(Ndiv,geom,Qinf)
     ca   = geom.ca;
     sa   = geom.sa;
 
-    [A11, A12, B1] = computeA(Ndiv, Tc(1:Ndiv,:), Xc(1:Ndiv,:), X(1:Ndiv,:), ...
-        l(1:Ndiv), ca(1:Ndiv), sa(1:Ndiv), Qinf, X(Ndiv+1:end,:), l(Ndiv+1:end), ca(Ndiv+1:end), sa(Ndiv+1:end));
-    [A22, A21, B2] = computeA(Ndiv, Tc(Ndiv+1:end,:), Xc(Ndiv+1:end,:), X(Ndiv+1:end,:), ...
-        l(Ndiv+1:end), ca(Ndiv+1:end), sa(Ndiv+1:end), Qinf, X(1:Ndiv,:), l(1:Ndiv), ca(1:Ndiv), sa(1:Ndiv));    
+    [A11, A12, B1] = computeA(Ndiv_main, Tc(1:Ndiv_main,:), Xc(1:Ndiv_main,:), X(1:Ndiv_main+1,:), ...
+        l(1:Ndiv_main), ca(1:Ndiv_main), sa(1:Ndiv_main), Qinf, X(Ndiv_main+2:end,:), l(Ndiv_main+1:end), ca(Ndiv_main+1:end), sa(Ndiv_main+1:end));
+    [A22, A21, B2] = computeA(Ndiv_second, Tc(Ndiv_main+1:end,:), Xc(Ndiv_main+1:end,:), X(Ndiv_main+2:end,:), ...
+        l(Ndiv_main+1:end), ca(Ndiv_main+1:end), sa(Ndiv_main+1:end), Qinf, X(1:Ndiv_main+1,:), l(1:Ndiv_main), ca(1:Ndiv_main), sa(1:Ndiv_main));    
 
     a = [A11, A12; A21, A22];
+    % a = [A11, zeros(Ndiv,1); zeros(1,Ndiv), 1];
+    % a = [1, zeros(1,Ndiv); zeros(Ndiv,1), A22];
     b = [B1; B2];
+    % b = [B1; 0];
+    % b = [0;B2];
 
     % --- Kutta 1 ---
     % gamma_1 + gamma_Ndiv = 0 
-    idx_K1 = fix(Ndiv/4); 
-    a(idx_K1, :) = 0;      % Clear row
-    a(idx_K1, 1) = 1;      % Coeficient primer panell perfil 1
-    a(idx_K1, Ndiv) = 1;   % Coeficient últim panell perfil 1
+    idx_K1 = fix(Ndiv_main/4)+1; 
+    a(idx_K1, :) = 0;           % Clear row
+    a(idx_K1, 1) = 1;           % Coeficient primer panell perfil 1
+    a(idx_K1, Ndiv_main) = 1;   % Coeficient últim panell perfil 1
     b(idx_K1) = 0;
 
     % --- Kutta 2 ---
     % gamma_Ndiv+1 + gamma_Ntotal = 0 
-    idx_K2 = Ndiv + fix(Ndiv/4);
-    a(idx_K2, :) = 0;      % Clear row
-    a(idx_K2, Ndiv+1) = 1; % Coeficient primer panell perfil 1
-    a(idx_K2, Ntotal) = 1; % Coeficient últim panell perfil 1
+    idx_K2 = Ndiv_main + fix(Ndiv_second/4);
+    a(idx_K2, :) = 0;                        
+    a(idx_K2, Ndiv_main+1) = 1;              
+    a(idx_K2, Ndiv_main + Ndiv_second) = 1;  
     b(idx_K2) = 0;
 
     gamma         = a\b;

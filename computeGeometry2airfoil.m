@@ -40,7 +40,7 @@ end
 % Airfoils altogether
 
 geom.X = [X1; X2];
-geom.c = c1 + c2;
+geom.c = c1 + c2 + d;
 
 Ntotal = Ndiv_main + Ndiv_second; 
 geom.l     = zeros(Ntotal,1);
@@ -62,6 +62,10 @@ for jj = 1:Ndiv_main
     geom.Nc(jj,:)    = [geom.sa(jj,1),geom.ca(jj,1)];                                        % Normal vectors coordinates
     geom.Tc(jj,:)    = [geom.ca(jj,1),-geom.sa(jj,1)];                                       % Tangent vector coordinates
 
+end
+
+for jj = 1:Ndiv_second
+
     % Second airfoil (elevator)
     geom.l(jj+Ndiv_main)       = sqrt((X2(jj,1) - X2(jj+1,1))^2 + (X2(jj,2) - X2(jj+1,2))^2);     % Panel's lenght
     geom.Xc(jj+Ndiv_main,:)    = (X2(jj,:) + X2(jj+1,:))/2;                                       % Panel's geometric center
@@ -70,6 +74,7 @@ for jj = 1:Ndiv_main
     geom.sa(jj+Ndiv_main)      = (X2(jj,2) - X2(jj+1,2))/geom.l(jj+Ndiv_main);                         % Sinus function
     geom.Nc(jj+Ndiv_main,:)    = [geom.sa(jj+Ndiv_main,1),geom.ca(jj+Ndiv_main,1)];                         % Normal vectors coordinates
     geom.Tc(jj+Ndiv_main,:)    = [geom.ca(jj+Ndiv_main,1),-geom.sa(jj+Ndiv_main,1)];                        % Tangent vector coordinates
+    
 end
 
 figure; hold on; axis equal; grid on
