@@ -200,8 +200,9 @@ chi05     = c_rh + (c_th - c_rh)*(2*abs(P_h_mid(:,2))/b_h);
 
 %% ------------------ STUDY OF THE WING ISOLATED - HQ300 ------------------ %
 
-twist_val = deg2rad([0:-0.25:-3 -3.01:-0.01:-3.99 -4:-0.25:-8]);
-n_twist   = length(twist_val);
+twist_val_deg = [0:-0.25:-3 -3.01:-0.01:-3.99 -4:-0.25:-8];
+twist_val     = deg2rad(twist_val_deg);
+n_twist       = length(twist_val);
 
 CL     = zeros(1, n_twist);
 CD     = zeros(1, n_twist);
@@ -261,7 +262,7 @@ end
 
 fprintf('Twist òptim (maximització L/D): theta_t = %+.2f°\n\n', theta_max_L_D);
 
-plotIsolatedWingResults(twist_val,eta,Cl_vec,Cd_ind_vec_1,Cd_visc_vec_1,alpha_ind_vec,CL,CD_ind,CD,theta_cd_min_deg,theta_max_L_D,alpha);
+plotIsolatedWingResults(twist_val_deg,twist_val,eta,Cl_vec,Cd_ind_vec_1,Cd_visc_vec_1,alpha_ind_vec,CL,CD_ind,CD,theta_cd_min_deg,theta_max_L_D,alpha);
 
 %% ------------------ STUDY OF THE COMPLETE SYSTEM (W C VTP) ------------------ %%
 

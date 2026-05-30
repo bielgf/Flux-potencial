@@ -1,13 +1,13 @@
-function plotIsolatedWingResults(twist_val,eta,Cl_vec,Cd_ind_vec_1,Cd_visc_vec_1,alpha_ind_vec,CL,CD_ind,CD,theta_cd_min_deg,theta_max_L_D,alpha)
+function plotIsolatedWingResults(twist_val_deg,twist_val,eta,Cl_vec,Cd_ind_vec_1,Cd_visc_vec_1,alpha_ind_vec,CL,CD_ind,CD,theta_cd_min_deg,theta_max_L_D,alpha)
 
-twist_val_filt     = twist_val(mod(rad2deg(twist_val),1) == 0);
-Cl_vec_filt        = Cl_vec(:,mod(rad2deg(twist_val),1) == 0);
-Cd_ind_vec_1_filt  = Cd_ind_vec_1(:,mod(rad2deg(twist_val),1) == 0);
-Cd_visc_vec_1_filt = Cd_visc_vec_1(:,mod(rad2deg(twist_val),1) == 0);
-alpha_ind_vec_filt = alpha_ind_vec(:,mod(rad2deg(twist_val),1) == 0);
-CL_filt            = CL(mod(rad2deg(twist_val),1) == 0);
-CD_ind_filt        = CD_ind(mod(rad2deg(twist_val),1) == 0);
-CD_filt            = CD(mod(rad2deg(twist_val),1) == 0);
+twist_val_filt     = twist_val(mod(twist_val_deg,1) == 0);
+Cl_vec_filt        = Cl_vec(:,mod(twist_val_deg,1) == 0);
+Cd_ind_vec_1_filt  = Cd_ind_vec_1(:,mod(twist_val_deg,1) == 0);
+Cd_visc_vec_1_filt = Cd_visc_vec_1(:,mod(twist_val_deg,1) == 0);
+alpha_ind_vec_filt = alpha_ind_vec(:,mod(twist_val_deg,1) == 0);
+CL_filt            = CL(mod(twist_val_deg,1) == 0);
+CD_ind_filt        = CD_ind(mod(twist_val_deg,1) == 0);
+CD_filt            = CD(mod(twist_val_deg,1) == 0);
 
 n_twist_filt = length(twist_val_filt);
 
