@@ -13,7 +13,7 @@
 
 clear;clc;close all
 
-%------------------ HQ300 AIRFOIL STUDY -------------------%
+%% ------------------ HQ300 AIRFOIL STUDY ------------------- %%
 
 alpha = deg2rad(0:2:8);
 Ndiv  = [16, 32, 64, 128, 256, 512];
@@ -81,7 +81,7 @@ for ii = 1:length(Mcr_val)
     CL_Mcr_table(ii) = CL_comp;
 end
 
-%% Two NACA 0012 airfoils tandem
+%% ------------------ TWO NACA 0012 AIRFOILS TANDEM ------------------ %%
 clear;clc;
 
 % Disclaimer: It is important for this code to mantain the same number of
@@ -146,7 +146,8 @@ if subsection == 5; plotCLandCM14vsdelta(delta_e,CL_table,CM14_table); end
 % --------------------------------------------------------------------- %
 
 clc; clear;
-%---------------------- INPUT DATA -----------------------%
+
+% ---------------------- INPUT DATA ---------------------- %
 
 % Geometric Data
 b      = 15;
@@ -197,9 +198,9 @@ P_h_mid = [l_h*ones(1,size(yP_h,2)-1) ; (yP_h(1:end-1)+yP_h(2:end))/2 ; zeros(1,
 cwi05     = c_r + (c_t - c_r)*(2*abs(P_w_mid(:,2))/b);
 chi05     = c_rh + (c_th - c_rh)*(2*abs(P_h_mid(:,2))/b_h);
 
-%---------- STUDY OF THE WING ISOLATED - HQ300 -----------%
+%% ------------------ STUDY OF THE WING ISOLATED - HQ300 ------------------ %
 
-twist_val = deg2rad(0:-1:-8);
+twist_val = deg2rad([0:-0.25:-3 -3.01:-0.01:-3.99 -4:-0.25:-8]);
 n_twist   = length(twist_val);
 
 CL     = zeros(1, n_twist);
@@ -243,6 +244,7 @@ end
 theta_cd_min_deg = rad2deg(twist_val(idx_opt));
 fprintf('--- RESULTS (PART 2, SECTION 1) ---\n');
 fprintf('Twist que minimitza CDind: theta_t = %+.2f°\n', theta_cd_min_deg);
+
 y_mid = (P_w(1:end-1,2) + P_w(2:end,2))/2;
 eta   = y_mid/(b/2);   % coordenada normalitzada
 
@@ -259,92 +261,13 @@ end
 
 fprintf('Twist òptim (maximització L/D): theta_t = %+.2f°\n\n', theta_max_L_D);
 
-% ── Spanwise lift ────
-figure;
-cmap = parula(n_twist);
-hold on
-for jj = 1:n_twist
-    plot(eta, Cl_vec(:,jj), 'Color', cmap(jj,:), 'LineWidth', 0.5, 'DisplayName', sprintf('\\theta_t = %+.0f°', rad2deg(twist_val(jj))));
-end
-xlabel('2y/b','FontSize',12)
-ylabel('C_l','FontSize',12)
-title('Spanwise distribution of section lift coefficient','FontSize',12)
-legend('Location','south','NumColumns',3,'FontSize',9)
-grid on; xlim([-1 1])
+plotIsolatedWingResults(twist_val,eta,Cl_vec,Cd_ind_vec_1,Cd_visc_vec_1,alpha_ind_vec,CL,CD_ind,CD,theta_cd_min_deg,theta_max_L_D,alpha);
 
-% ── Spanwise total drag ───
-figure;
-cmap = parula(n_twist);
-hold on
-for jj = 1:n_twist
-    plot(eta, Cd_ind_vec_1(:,jj), 'Color', cmap(jj,:), 'LineWidth', 0.5, 'DisplayName', sprintf('\\theta_t = %+.0f°', rad2deg(twist_val(jj))));
-end
-xlabel('2y/b','FontSize',12)
-ylabel('C_di','FontSize',12)
-title('Spanwise distribution of section induced drag coefficient','FontSize',12)
-legend('Location','south','NumColumns',3,'FontSize',9)
-grid on; xlim([-1 1])
-
-% ── Spanwise viscous drag ────
-figure;
-cmap = parula(n_twist);
-hold on
-for jj = 1:n_twist
-    plot(eta, Cd_visc_vec_1(:,jj), 'Color', cmap(jj,:), 'LineWidth', 0.5, ...
-        'DisplayName', sprintf('\\theta_t = %+.0f°', rad2deg(twist_val(jj))));
-end
-xlabel('2y/b', 'FontSize', 12)
-ylabel('C_{d,visc}', 'FontSize', 12)
-title('Spanwise distribution of section viscous drag coefficient', 'FontSize', 12)
-legend('Location', 'south', 'NumColumns', 3, 'FontSize', 9)
-grid on; xlim([-1 1])
-
-% ── Spanwise induced angle of attack ───
-figure;
-cmap = parula(n_twist);
-hold on
-for jj = 1:n_twist
-    plot(eta, rad2deg(alpha_ind_vec(:,jj)), 'Color', cmap(jj,:), 'LineWidth', 0.5, ...
-        'DisplayName', sprintf('\\theta_t = %+.0f°', rad2deg(twist_val(jj))));
-end
-xlabel('2y/b', 'FontSize', 12)
-ylabel('\alpha_{ind} [°]', 'FontSize', 12)
-title('Spanwise distribution of induced angle of attack', 'FontSize', 12)
-legend('Location', 'south', 'NumColumns', 3, 'FontSize', 9)
-grid on; xlim([-1 1])
-
-figure;
-subplot(1,2,1)
-plot(rad2deg(twist_val), CL, 'bo-','LineWidth',1,'MarkerFaceColor','b','MarkerSize',3)
-xlabel('\theta_t [°]','FontSize',11)
-ylabel('C_L','FontSize',11)
-title('Total Lift','FontSize',11)
-grid on; grid minor
-subplot(1,2,2)
-plot(rad2deg(twist_val), CD_ind, 'r^-','LineWidth',1,'MarkerFaceColor','r','MarkerSize',3,'DisplayName','C_{D,ind}')
-hold on
-plot(rad2deg(twist_val), CD, 'ks-','LineWidth',1,'MarkerFaceColor','k','MarkerSize',3,'DisplayName','C_{D,total}')
-xline(theta_cd_min_deg,'--','Color',[0 0.6 0],'LineWidth',1.5,'DisplayName','Minimum C_{d_{ind}}','Label',sprintf('\\theta_t=%+.0f°',theta_cd_min_deg))
-xline(theta_max_L_D,'--','Color',[0 0 0.6],'LineWidth',1.5,'DisplayName','Maximum C_L/C_D','Label',sprintf('\\theta_t=%+.0f°',theta_max_L_D))
-xlabel('\theta_t [°]','FontSize',11)
-ylabel('C_D','FontSize',11)
-title('Total Drag','FontSize',11)
-legend('Location','best','FontSize',9); grid on; grid minor
-sgtitle(sprintf('Wing twist effect | \\alpha = %.0f°', rad2deg(alpha)), 'FontSize',12,'FontWeight','bold')
-
-figure;
-plot(rad2deg(twist_val), CL./CD, 'bo-', 'LineWidth', 1,'MarkerFaceColor', 'b', 'MarkerSize', 2)
-xline(theta_max_L_D, '--', 'Color', 'k', 'LineWidth', 1.5, 'Label', sprintf('\\theta_t = %.2f°', theta_max_L_D), 'LabelVerticalAlignment', 'middle');
-xlabel('\theta_t [°]', 'FontSize', 12)
-ylabel('C_L / C_D', 'FontSize', 12)
-title('Lift-to-drag ratio vs wing tip twist | \alpha = 4°', 'FontSize', 12)
-grid on; grid minor
-
-%%%%%%%%-------- STUDY OF THE COMPLETE SYSTEM (W C VTP) ---------%%%%%%%%
+%% ------------------ STUDY OF THE COMPLETE SYSTEM (W C VTP) ------------------ %%
 
 Cl0h      = 0;                           % De la Part 1, Apartat 4
 Clah      = (0.902768 - 0)/deg2rad(8);   % De la Part 1, Apartat 4
-twist_tip = deg2rad(-3.84);
+twist_tip = deg2rad(theta_max_L_D);
 thetai05  = twist_tip*(2*abs(P_w_mid(:,2))/b);
 Cm14_w    = -0.1376;                     % De la Part 1, Apartat 1: alpha 4
 Cm14_h    = -0.0015;                     % De la Part 1, Apartat 5: alpha 4, delta 0
@@ -375,90 +298,13 @@ Claw_iso = 0;
 [~, Cl_y_h_iso, ~, ~, ~, Cdi_y_h_iso, Cdp_y_h_iso, Cd_y_h_iso, ~] = computeWingCanardAerodynamics(zeros(size(gamma_w)),gamma_h_iso,...
     alpha,cwi05,chi05,Qinf_mod,Cl0w_iso,Cl0h,Claw_iso,Clah,thetai05,i_h,rho,dy_w,dy_h,l_h,Cm14_w,Cm14_h);
 
-
-% Gamma and Cl
-figure('Units', 'normalized', 'Position', [0.1, 0.2, 0.8, 0.45]);
-t = tiledlayout(1,2,'TileSpacing','compact');
-% --- TILE 1: Gamma ---
-ax1 = nexttile;
-hold on; box on;
-plot(2*P_w_mid(:,2)/b, gamma_w, 'b');
-plot(2*P_h_mid(:,2)/b, gamma_h, 'r');
-plot(2*P_w_mid(:,2)/b, gamma_w_iso, 'b--');
-plot(2*P_h_mid(:,2)/b, gamma_h_iso, 'r--');
-xlabel('2y/b');
-ylabel('Circulation, \Gamma [m^2/s]');
-title('Circulation distribution (\Gamma)');
-grid on;
-set(gca, 'GridAlpha', 0.15);
-% --- TILE 2: Cl ---
-ax2 = nexttile;
-hold on; box on;
-plot(2*P_w_mid(:,2)/b, Cl_y_w, 'b');
-plot(2*P_h_mid(:,2)/b, Cl_y_h, 'r');
-plot(2*P_w_mid(:,2)/b, Cl_y_w_iso, 'b--');
-plot(2*P_h_mid(:,2)/b, Cl_y_h_iso, 'r--');
-xlabel('2y/b');
-ylabel('Local lift coefficient, C_l');
-title('Lift distribution (C_l)');
-grid on;
-set(gca, 'GridAlpha', 0.15);
-
-lgd = legend(ax2, ...
-    'Wing (Complete System)', ...
-    'Canard (Complete System)', ...
-    'Wing (Isolated)', ...
-    'Canard (Isolated)');
-lgd.Layout.Tile = 'east';
-
-
-% Cdi, Cdp and Cd
-figure('Units', 'normalized', 'Position', [0.1, 0.1, 0.8, 0.8]);
-t = tiledlayout(2,2,'TileSpacing','compact');
-% --- TILE 1: Cdi ---
-ax1 = nexttile;
-hold on; box on;
-plot(2*P_w_mid(:,2)/b, Cdi_y_w, 'b');
-plot(2*P_h_mid(:,2)/b, Cdi_y_h, 'r');
-plot(2*P_w_mid(:,2)/b, Cdi_y_w_iso, 'b--');
-plot(2*P_h_mid(:,2)/b, Cdi_y_h_iso, 'r--');
-xlabel('2y/b');
-ylabel('Local induced drag coefficient, C_{di}');
-title('Induced drag distribution (C_{di})');
-grid on;
-set(gca, 'GridAlpha', 0.15);
-% --- TILE 2: Cdp ---
-ax2 = nexttile;
-hold on; box on;
-plot(2*P_w_mid(:,2)/b, Cdp_y_w, 'b');
-plot(2*P_h_mid(:,2)/b, Cdp_y_h, 'r');
-plot(2*P_w_mid(:,2)/b, Cdp_y_w_iso, 'b--');
-plot(2*P_h_mid(:,2)/b, Cdp_y_h_iso, 'r--');
-xlabel('2y/b');
-ylabel('Local viscous drag coefficient, C_{dp}');
-title('Viscous drag distribution (C_{dp})');
-grid on;
-set(gca, 'GridAlpha', 0.15);
-% --- TILE 3: Cd ---
-ax3 = nexttile;
-hold on; box on;
-plot(2*P_w_mid(:,2)/b, Cd_y_w, 'b');
-plot(2*P_h_mid(:,2)/b, Cd_y_h, 'r');
-plot(2*P_w_mid(:,2)/b, Cd_y_w_iso, 'b--');
-plot(2*P_h_mid(:,2)/b, Cd_y_h_iso, 'r--');
-xlabel('2y/b');
-ylabel('Local drag coefficient, C_d');
-title('Drag distribution (C_d)');
-grid on;
-set(gca, 'GridAlpha', 0.15);
-
-lgd = legend(ax3, ...
-    'Wing (Complete System)', ...
-    'Canard (Complete System)', ...
-    'Wing (Isolated)', ...
-    'Canard (Isolated)');
-lgd.Layout.Tile = 4;
-
+plotCompleteSystemResults( ...
+    P_w_mid, P_h_mid, b, ...
+    gamma_w,     gamma_h,     gamma_w_iso,     gamma_h_iso, ...
+    Cl_y_w,      Cl_y_h,      Cl_y_w_iso,      Cl_y_h_iso, ...
+    Cdi_y_w,     Cdi_y_h,     Cdi_y_w_iso,     Cdi_y_h_iso, ...
+    Cdp_y_w,     Cdp_y_h,     Cdp_y_w_iso,     Cdp_y_h_iso, ...
+    Cd_y_w,      Cd_y_h,      Cd_y_w_iso,      Cd_y_h_iso);
 
 % 3. Polar Aerodynamic Curve for delta = 0
 
