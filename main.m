@@ -15,6 +15,8 @@ clear;clc;close all
 
 %% ------------------ HQ300 AIRFOIL STUDY ------------------- %%
 
+% ---------------------- INPUT DATA ---------------------- %
+
 alpha = deg2rad(0:2:8);
 Ndiv  = [16, 32, 64, 128, 256, 512];
 
@@ -34,6 +36,7 @@ gam     = 1.4;
 Qinfmod = 1;
 Minf    = 0;
 
+% 1. C_L and CM_1/4 for angles of attack varying in a range 0 ≤ 𝛼 ≤ 8°.
 
 for jj = 1:nN
     for ii = 1:nA
@@ -59,6 +62,8 @@ plotCLandCM14vsalpha(alpha,CL_table,CM14_table);
 plotConvergence(Ndiv,CL_table,alpha);
 
 
+% 2. Using Kármán-Tsien’s rule, determine the critical Mach number for 𝛼 = 0°, 2°, 4°. 
+
 Mcr = zeros(1,nA-2);
 
 for ii = 1:nA-2
@@ -69,6 +74,8 @@ for ii = 1:nA-2
     Mcr(ii) = computeCriticalMachNumber(cp,gam);
 end
 
+
+% 3. C_L for 𝛼 = 4° for different free stream Mach numbers
 
 Mcr_val      = [0, Mcr(end) - 0.15, Mcr(end) - 0.10, Mcr(end) - 0.05, Mcr(end)]; % The first being 0 to compare with the results obtained previously
 CL_Mcr_table = zeros(1,length(Mcr_val));
@@ -87,6 +94,12 @@ clear;clc;
 % Disclaimer: It is important for this code to mantain the same number of
 % Ndiv_main and Ndiv_second, as well as the same number of alpha and
 % delta_e combinations, for how the loops are defined.
+
+% 4. Obtain the C_L, and the CM_1/4, for zero elevator deflection,
+% and the angle of attack varying in a range 0 ≤ 𝛼 ≤ 8°.
+
+% 5. Compute the C_L and the CM_1/4, for an angle of attack 𝛼 = 4°,
+% and the elevator deflection angle varying in a range 0 ≤ 𝛿_e ≤ 16°. 
 
 Ndiv_main   = [16, 32, 64, 128, 256, 512];
 Ndiv_second = [16, 32, 64, 128, 256, 512];
@@ -199,6 +212,9 @@ cwi05     = c_r + (c_t - c_r)*(2*abs(P_w_mid(:,2))/b);
 chi05     = c_rh + (c_th - c_rh)*(2*abs(P_h_mid(:,2))/b_h);
 
 %% ------------------ STUDY OF THE WING ISOLATED - HQ300 ------------------ %
+
+% 1. Select and justify an adequate wing twist, and plot the spanwise distribution of the 
+% local coefficients of lift, viscous drag, induced drag and induced angle of attack.
 
 twist_val_deg = [0:-0.25:-3 -3.01:-0.01:-3.99 -4:-0.25:-8];
 twist_val     = deg2rad(twist_val_deg);
