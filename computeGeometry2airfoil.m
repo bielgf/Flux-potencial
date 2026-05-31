@@ -77,9 +77,9 @@ for jj = 1:Ndiv_second
     
 end
 
-figure; hold on; axis equal; grid on
-plot(X1(:,1),X1(:,2),'b.-')
-plot(X2(:,1),X2(:,2),'r.-')
-legend('Main airfoil','Elevator')
-title(sprintf('Two-element geometry, \\delta_e = %.1f°',delta_e_deg))
-xlabel('x'); ylabel('z');
+% figure; hold on; axis equal; grid on
+% plot(X1(:,1),X1(:,2),'b.-')
+% plot(X2(:,1),X2(:,2),'r.-')
+% legend('Main airfoil','Elevator')
+% title(sprintf('Two-element geometry, \\delta_e = %.1f°',delta_e_deg))
+% xlabel('x'); ylabel('z');

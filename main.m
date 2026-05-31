@@ -345,7 +345,7 @@ CL_global_d12 = (L_w_d + L_h_d) / (0.5 * rho * Qinf_mod^2 * Sw);
 
 M14_w_d    = sum(0.5 * rho * Qinf_mod^2 * cwi05.^2 * Cm14_w .* dy_w);
 M14_h_d    = sum(0.5 * rho * Qinf_mod^2 * chi05.^2 * Cm14_h_d12 .* dy_h); 
-M_CM_total = M14_w_d - L_w_d * CM_loc + M14_h_d + L_h_d * (l_h - CM_loc);
+M_CM_total = M14_w_d + L_w_d * CM_loc + M14_h_d + L_h_d * (CM_loc - l_h);
 
 Cm_global_d12 = M_CM_total / (0.5 * rho * Qinf_mod^2 * Sw * c_bar);
 
