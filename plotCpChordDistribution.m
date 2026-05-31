@@ -1,31 +1,18 @@
 function plotCpChordDistribution(X,cp,alpha,Ndiv)
 
-    % Calcular las coordenadas X e Y de los centros de los paneles (puntos de control)
     X_nodes = X(:, 1);
-    X_mid   = (X_nodes(1:end-1) + X_nodes(2:end))/2; % Tamaño Ndiv
+    X_mid   = (X_nodes(1:end-1) + X_nodes(2:end))/2; 
     
-    % Encontrar el índice del Borde de Ataque (Leading Edge)
-    % Es el punto donde la coordenada X es mínima
     [~, LE_idx] = min(X_mid);
-    
-    % Separar los índices en Intradós y Extradós
-    % Asumimos el orden estándar de los métodos de paneles: 
-    % Comienza en Borde de Salida inferior -> Borde de Ataque -> Borde de Salida superior.
     idx_intrados = 1:LE_idx;
     idx_extrados = LE_idx+1:length(X_mid);
 
-    % Crear la figura
+    % PLOT
     figure;
     hold on; 
-    grid on; % Activar la cuadrícula
-    
-    % Dibujar la línea negra continua que une todos los puntos del Cp
+    grid on; 
     plot(X_mid, cp, 'k-', 'LineWidth', 1);
-    
-    % Dibujar los puntos del Intradós (Círculos azules vacíos)
     p_int = plot(X_mid(idx_intrados), cp(idx_intrados), 'bo', 'MarkerSize', 6);
-    
-    % Dibujar los puntos del Extradós (Círculos rojos vacíos)
     p_ext = plot(X_mid(idx_extrados), cp(idx_extrados), 'ro', 'MarkerSize', 6);
     
     xlabel('X', 'FontSize', 12);
@@ -39,3 +26,5 @@ function plotCpChordDistribution(X,cp,alpha,Ndiv)
     text(0.5, 0.75*cp_bot, sprintf('N_{div} = %d', Ndiv),'FontSize',11, 'FontName','Times New Roman');
 
 end
+
+% Gemini AI used to enhance plots

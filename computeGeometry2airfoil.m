@@ -70,10 +70,10 @@ for jj = 1:Ndiv_second
     geom.l(jj+Ndiv_main)       = sqrt((X2(jj,1) - X2(jj+1,1))^2 + (X2(jj,2) - X2(jj+1,2))^2);     % Panel's lenght
     geom.Xc(jj+Ndiv_main,:)    = (X2(jj,:) + X2(jj+1,:))/2;                                       % Panel's geometric center
     geom.delta(jj+Ndiv_main,:) = X2(jj+1,:) - X2(jj,:);                                           % Increments in X and Z
-    geom.ca(jj+Ndiv_main)      = (X2(jj+1,1) - X2(jj,1))/geom.l(jj+Ndiv_main);                         % Cosinus function
-    geom.sa(jj+Ndiv_main)      = (X2(jj,2) - X2(jj+1,2))/geom.l(jj+Ndiv_main);                         % Sinus function
-    geom.Nc(jj+Ndiv_main,:)    = [geom.sa(jj+Ndiv_main,1),geom.ca(jj+Ndiv_main,1)];                         % Normal vectors coordinates
-    geom.Tc(jj+Ndiv_main,:)    = [geom.ca(jj+Ndiv_main,1),-geom.sa(jj+Ndiv_main,1)];                        % Tangent vector coordinates
+    geom.ca(jj+Ndiv_main)      = (X2(jj+1,1) - X2(jj,1))/geom.l(jj+Ndiv_main);                    % Cosinus function
+    geom.sa(jj+Ndiv_main)      = (X2(jj,2) - X2(jj+1,2))/geom.l(jj+Ndiv_main);                    % Sinus function
+    geom.Nc(jj+Ndiv_main,:)    = [geom.sa(jj+Ndiv_main,1),geom.ca(jj+Ndiv_main,1)];               % Normal vectors coordinates
+    geom.Tc(jj+Ndiv_main,:)    = [geom.ca(jj+Ndiv_main,1),-geom.sa(jj+Ndiv_main,1)];              % Tangent vector coordinates
     
 end
 

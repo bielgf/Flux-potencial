@@ -5,7 +5,7 @@ function [gamma,gamma_w,gamma_h] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid
 
     for ii = 1:Nw
         b(ii,1) = 0.5*cwi05(ii)*Q_inf_mod*(Cl0w + Claw*(alpha + thetai05(ii)));
-        % Compute Wing-Wing influence
+        % Wing-Wing influence
         for jj = 1:Nw
             if ii == jj
                 v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_w_mid(ii,:),ur,'WingWing');
@@ -16,7 +16,7 @@ function [gamma,gamma_w,gamma_h] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid
             end
         end
 
-        % Compute Wing-Canard influence
+        % Wing-Canard influence
         for jj = 1:Nh
             v = computeHSV(ii,jj,P_h(jj,:),P_h(jj+1,:),P_w_mid(ii,:),ur,'WingCnrd');
             a(ii,Nw+jj) = -0.5*Claw*cwi05(ii)*dot(v,k_inf);
@@ -25,7 +25,7 @@ function [gamma,gamma_w,gamma_h] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid
 
     for ii = 1:Nh
         b(Nw+ii,1) = 0.5*chi05(ii)*Q_inf_mod*(Cl0h + Clah*(alpha + i_h));
-        % Compute Canard-Canard influence
+        % Canard-Canard influence
         for jj = 1:Nh
             if ii == jj
                 v = computeHSV(ii,jj,P_h(jj,:),P_h(jj+1,:),P_h_mid(ii,:),ur,'CnrdCnrd');
@@ -36,7 +36,7 @@ function [gamma,gamma_w,gamma_h] = computeWingCanardConfig(Nw,Nh,P_w,P_h,P_w_mid
             end
         end
 
-        % Compute Canard-Wing influence
+        % Canard-Wing influence
         for jj = 1:Nw
             v = computeHSV(ii,jj,P_w(jj,:),P_w(jj+1,:),P_h_mid(ii,:),ur,'CnrdWing');
             a(Nw+ii,jj) = -0.5*Clah*chi05(ii)*dot(v,k_inf);

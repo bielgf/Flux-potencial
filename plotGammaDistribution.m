@@ -25,4 +25,6 @@ function plotGammaDistribution(Ndiv,X,Nc,gamma)
     text(0.50,0.04,sprintf('N_{div} = %d',Ndiv),'FontSize',11,'FontName','Times New Roman','HorizontalAlignment','center');
     title('DISTRIBUTION OF VORTEX STRENGTH','FontName','Times New Roman','FontWeight','normal');
 
+% Gemini AI used to enhance plots
+
 end

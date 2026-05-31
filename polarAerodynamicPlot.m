@@ -65,4 +65,6 @@ ylabel('Efficiency, E = C_L / C_D'); ylim([0; 45]);
 title('Aerodynamic Efficiency vs \alpha');
 grid on; set(gca, 'GridAlpha', 0.15);
 
+% Gemini AI used to enhance plots
+
 end

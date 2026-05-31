@@ -28,4 +28,6 @@ function plotCpDistribution(X,Nc,Xc,cp,alpha,Ndiv,CL)
     text(0.3,0.3, sprintf('N_{div} = %d', Ndiv),'FontSize',11,'FontName','Times New Roman');
     title('DISTRIBUTION OF PRESSURE COEFFICIENT','FontName','Times New Roman','FontWeight','normal');
 
+% Gemini AI used to enhance plots
+
 end

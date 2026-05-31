@@ -92,5 +92,6 @@ ylabel('C_L / C_D', 'FontSize', 12)
 title('Lift-to-drag ratio vs wing tip twist | \alpha = 4°', 'FontSize', 12)
 grid on; grid minor
 
+% Gemini AI used to enhance plots
 
 end
