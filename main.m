@@ -180,7 +180,7 @@ c_bar  = (2/3)*c_r*(1 + lambda + lambda^2)/(1 + lambda); % MAC mean aerodynamic 
 
 % Numerical Data
 Nw = 512;
-Nh = Nw/4;
+Nh = Nw;
 
 % Aerodynamic Data
 rho       = 1.225;
@@ -343,12 +343,29 @@ L_w_d         = sum(rho * Qinf_mod * gamma_w_d .* dy_w);
 L_h_d         = sum(rho * Qinf_mod * gamma_h_d .* dy_h);
 CL_global_d12 = (L_w_d + L_h_d) / (0.5 * rho * Qinf_mod^2 * Sw);
 
+Cl_y_h = (2 * gamma_h) ./ (Qinf_mod * chi05);
+alpha_i_h = (alpha + i_h) - (Cl_y_h - Cl0h)/Clah;
+Cdi_y_h = Cl_y_h .* alpha_i_h;
+Cdp_y_h = 0.0052 * Cl_y_h.^2 + 0.0071;
+Cd_y_h = Cdi_y_h + Cdp_y_h;
+
+Cl_y_w = (2 * gamma_w) ./ (Qinf_mod * cwi05);
+alpha_i_w = (alpha + thetai05) - (Cl_y_w - Cl0w)/Claw; 
+Cdi_y_w = Cl_y_w .* alpha_i_w;
+Cdp_y_w = 0.0183 * Cl_y_w.^2 - 0.0302 * Cl_y_w + 0.0187; 
+Cd_y_w = Cdi_y_w + Cdp_y_w;
+
+D_w = sum(0.5 * rho * Qinf_mod^2 * cwi05 .* Cd_y_w .* dy_w);
+D_h = sum(0.5 * rho * Qinf_mod^2 * chi05 .* Cd_y_h .* dy_h);
+CD_global_d12 = (D_w + D_h) / (0.5 * rho * Qinf_mod^2 * Sw);
+
 M14_w_d    = sum(0.5 * rho * Qinf_mod^2 * cwi05.^2 * Cm14_w .* dy_w);
 M14_h_d    = sum(0.5 * rho * Qinf_mod^2 * chi05.^2 * Cm14_h_d12 .* dy_h); 
-M_CM_total = M14_w_d + L_w_d * CM_loc + M14_h_d + L_h_d * (CM_loc - l_h);
+M_CM_total = M14_w_d + L_w_d * CM_loc + D_w*alpha + M14_h_d + L_h_d * (CM_loc - l_h) - D_h*alpha;
 
 Cm_global_d12 = M_CM_total / (0.5 * rho * Qinf_mod^2 * Sw * c_bar);
 
 fprintf('--- RESULTS (PART 2, SECTION 4) ---\n');
 fprintf('Global lift coefficient (C_L): %.4f\n', CL_global_d12);
+fprintf('Global drag coefficient (C_D): %.4f\n', CD_global_d12);
 fprintf('Pitching moment coefficient about CM (C_m,CM): %.4f\n', Cm_global_d12);

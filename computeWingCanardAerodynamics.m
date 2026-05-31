@@ -17,13 +17,14 @@ Cd_y_h = Cdi_y_h + Cdp_y_h;
 % Integration of global forces and moments 
 L_w = sum(rho * Qinf_mod * gamma_w .* dy_w);
 L_h = sum(rho * Qinf_mod * gamma_h .* dy_h);
-
+D_w = sum(0.5 * rho * Qinf_mod^2 * cwi05 .* Cd_y_w .* dy_w);
+D_h = sum(0.5 * rho * Qinf_mod^2 * chi05 .* Cd_y_h .* dy_h);
 M14_w = sum(0.5 * rho * Qinf_mod^2 * cwi05.^2 * Cm14_w .* dy_w);
 M14_h = sum(0.5 * rho * Qinf_mod^2 * chi05.^2 * Cm14_h .* dy_h);
 
 % CM location (M_CM = 0)
 if Claw ~= 0 && Clah ~= 0
-    CM_loc = (-M14_w - M14_h + L_h * l_h) / (L_w + L_h);
+    CM_loc = (-M14_w - M14_h - D_w*alpha + D_h*alpha + L_h * l_h) / (L_w + L_h);
     fprintf('--- RESULTS (PART 2, SECTION 2) ---\n');
     fprintf('CM required position is: %.4f meters\n\n', CM_loc);
 else
